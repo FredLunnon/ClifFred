@@ -1,0 +1,169 @@
+
+#   "ClifFred" documentation for real degenerate Clifford algebras  Cl(p,q,r) . 
+# Version 1.1; date: 20/08/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+
+			Introduction 
+         		____________ 
+
+  Module  <GA_multor.py>  comprises Python source for a lightweight, portable, 
+reasonably efficient geometric algebra engine, implementing basic operations 
+on multors (multivectors) in a degenerate Clifford algebra  Cl(p,q,r) .  
+Components are notionally approximate numerical (double-length floating-point), 
+though with some restrictions they may in practice also be integer, complex, 
+or rational, symbolic (using <SymPy>), etc.  This release should be regarded 
+as beta-stable. 
+
+  There is currenty no provision for user-friendliness: operations are invoked 
+only via explicit procedure call; coercion between component types and 
+multors must be explicit.  Nor can a multor be conventionally represented 
+as a polynomial in the generators, either in program or in input/ouput: 
+it is left to the user to interpret the internal representation, a nested 
+list of grators (graded sub-vectors) qua lists of components. 
+
+  Module  <GA_scripts.py>  contains several examples of complete though 
+sparsely documented applications using the engine.  A more elementary example, 
+the system test executed on importing  <GA_multor.py> , is appended below. 
+A more elaborate and developed application  <GA_givens.py>  documented in 
+ <GA_givens.txt>  concerns frame transformation and Givens' decomposition. 
+
+  Competing packages for Python providing such luxuries as syntactic sugar, 
+documentation, quadratic spaces, and/or analytic capabilities in various 
+combinations may be found at 
+    https: //github.com/brombo/galgebra 
+        [ <GAlgebra> , Alan Bromborsky]; 
+    http://clifford.readthedocs.io/en/latest/ 
+        [ <clifford> , Robert Kern]; 
+    https://documen.tician.de/pymbolic/geometric-algebra.html 
+        [ <pymbolic> , Andreas Kloeckner]. 
+
+################################################################################
+
+			Specifications 
+         		______________ 
+
+  Initially an assignment of form 
+    GA = ClifFred ([s_1, ..., s_n], [t_1, ..., t_n]); 
+must be executed by the user, instantiating a real geometric / Clifford algebra  
+GA  with  n  generators  e_i  and signatures  s_i  in  {+1, -1, 0}  where 
+    e_1 e_1 = s_1 ,  ... ,  e_n e_n = s_n , 
+before operations in the algebra can be executed.  The optional final parameter 
+(usually omitted) is used to assign signs  t_i  in  {+1, -1}  to zero  s_i , 
+required in order to construct the duality operator of a degenerate algebra: 
+its default sets  t_i = +1 . 
+
+  Operations are invoked via explicit function call only (no infix expressions).  
+The functions currently available are as follows, where  X,Y,Z  denote multors,  
+a,b,c  (floating-point double-length) real numbers,  i,j,k,l  integers in 
+interval  [0, n]  inclusive.  Functions marked `graded' are equipped with 
+optional parameters  k, l : if neither is set, all grades of the result are 
+returned; if just  k  is set, that grade is returned; if both are set, grades 
+from  k  to  l  inclusive are returned.  
+
+  Z = GA.gra(X, k, l) 		Z := <X>_k 	extract grades, graded  
+  Lk = GA.lis(X, k) 		[...] := <X>_k 	coerce from grade k to list 
+  Z = GA.gen(k) 		Z := e_k 	build unit vector 
+  Z = GA.bld([a,...,c], k)     	<Z>_k := [...] 	coerce from list to grade k  
+  Z = GA.mag2(X) 		Z := ||X|| 	magnitude 
+  Z = GA.rev(X, k, l) 		Z := X+  	reversion, graded 
+  Z = GA.par(X, k, l) 		Z := X*  	parity involution, graded 
+  Z = GA.dual(X, k, l) 		Z := X~  	dual, graded (see below) 
+  Z = GA.add(X, Y, k, l) 	Z := X + Y 	sum, graded 
+  Z = GA.mul(X, Y, k, l) 	Z := X Y 	Clifford product, graded 
+  Z = GA.lum(X, Y, k, l) 	Z := (X~ Y~)~ 	dual product, graded 
+  Z = GA.form(X, Y, k, l) 	Z := (Y+) X Y 	transform, graded 
+  Z = GA.lecon(X, Y, k, l) 	Z := X _| Y 	left contract, graded 
+  Z = GA.ricon(X, Y, k, l) 	Z := X |_ Y 	right contract, graded 
+  Z = GA.wedge(X, Y, k, l) 	Z := X ^ Y 	outer product, graded 
+  Z = GA.vee(X, Y, k, l) 	Z := (X~ ^ Y~)~ dual outer product, graded  
+  Z = GA.dot(X, Y, k, l) 	Z := X o Y 	fat-dot inner product, graded  
+  Z = GA.scalar(X, Y) 		Z := X * Y 	scalar product 
+  Z = GA.addlis([X,...,Y]) 	Z := X +...+ Y 	sum of list 
+  Z = GA.mullis([X,...,Y]) 	Z := X ... Y 	Clifford product of list 
+  eps = GA.zero(X) 		|X - 0| 	distance from zero 
+  eps = GA.prop(X, Y) 		|X/Y - scalar| 	distance from proportionality 
+
+# GA.from_zero(X), GA.from_prop(X, Y)  return error measure; normalise()  --- ?? 
+
+  Other properties of the algebra are available as variables, which should not 
+usually be altered by the user. [ A further subset concerned with the detailed 
+implementation of Clifford multiplication are omitted here and not supported. ] 
+
+  GA.dim 		vector dimension  n  of algebra 
+  GA.len 		multor dimension  2^n  of algebra 
+  GA.pow[k] 		binary mask digit  2^k 
+  GA.bin[k] 		length  n_C_k  of grade  k  (binomial coefficient)  
+  GA.gensig[i-1]	signature  e_i e_i  of generator  e_i  
+  GA.sigsig[i-1]	(nonzero) sign of signature of  e_i  
+  GA.mongo[k][t] 	monomial  m  binary-encoded as an integer, 
+                        at offset  t  in grade  k ,  0 <= t < bin[k] 
+  GA.gramon[m] 		grade  k  of monomial  m 
+  GA.offmon[m] 		offset  t  of monomial  m 
+  GA.J 			product of generators  e_i  with  e_i e_i <> 0 
+  GA.eps 		threshold for acceptable rounding error, used with  
+  			zero(), prop(); default  0.1^(16 - n) . 
+
+  Multivector data structure: 
+A multivector is represented internally as a list of graded subvectors, grade  k  comprising a list of  bin[k]  components or empty, for  0 <= k <= n .  
+Within each grade components occur in alphabetical order of their corresponding 
+generator monomials, which ascend left-to-right in order of index: component 
+order is independent of vector dimension.  Monomials are represented by binary 
+numbers, eg. Python  0b100011  encodes monomial  e1^e2^e6 ; with this notation 
+the corresponding monomial ordering of components runs thus: 
+  [ [0] [1 10 100 1000 ...] [11 101 110 1001 1010 1100 ...] 
+    [111 1011 1101 1110 ...] [1111 ...] ... ] 
+
+Access to individual components and (binary) monomials: 
+  GA.getcom(X, mon=0) 		component value of monomial  mon  in  X 
+  GA.putcom(X, mon=0, val=0) 	assign  val  to component of  mon  in  X 
+  GA.graset(mon) 		return grade  k  and offset  t  of  mon 
+  GA.monom(k, t) 		return monomial at offset  t  in grade  k 
+  
+Components may take integer or real floating-point numerical values, 
+or complex or symbolic expressions etc. if (say) SymPy has been imported. 
+
+################################################################################
+
+			Example 
+         		_______ 
+
+# Demo integer test of algebraic identities in  Cl(6) , Cl(2,2,2) ; 
+import timeit; 
+from GA_multor import *; 
+
+secs = timeit.default_timer(); 
+for (sigs, mags) in \
+[ ( [+1,+1,+1,+1,+1,+1], [30517578125, 15625, 12064000] ), \
+( [+1,+1,-1,-1,+0,+0], [530841600, 3600, 38400] ) ] : 
+  GA = ClifFred(sigs);  # initialise algebra 
+  X = GA.mullis([ GA.add(GA.bld([2]), GA.mul(GA.gen(j+1), GA.gen(i+1))) \
+  for i in range(0, GA.dim) for j in range(0, i) ]); X;  
+  # X = (2 + e1 e2)(2 + e1 e3)(2 + e2 e3) ... 
+  Y = GA.mullis([ GA.add(GA.bld([2]), GA.gen(i+1)) 
+  for i in range(0, GA.dim) ]); Y;  # Y = (2 + e1)(2 + e2)(2 + e3) ... 
+  Z = GA.mullis([ GA.add(GA.bld([2]), GA.mul(GA.bld([i+1]), GA.gen(i+1))) \
+  for i in range(0, GA.dim) ]); Z;  # Z = (2 + e1)(2 + 2 e2)(2 + 3 e3) ... 
+  
+  assert [GA.mag2(X), GA.mag2(Y), GA.mag2(Z)] == mags, \
+  "ClifFred:  ||X||, ||Y||, ||Z|| "; 
+  assert GA.mag2(X) == GA.lis(GA.mul(GA.rev(X), X))[0], 
+  \"ClifFred:  ||X|| = < X+ X >_0 "; 
+  assert GA.mul(GA.mul(X, Y), Z) == GA.mul(X, GA.mul(Y, Z)), \
+  "ClifFred:  X (Y Z) = (X Y) Z "; 
+  assert GA.mul(X, GA.add(Y, Z)) == GA.add(GA.mul(X, Y), GA.mul(X, Z)), \
+  "ClifFred:  X (Y + Z) = X Y + X Z "; 
+  assert GA.lecon(GA.wedge(X, Y), Z) == GA.lecon(X, GA.lecon(Y, Z)), \
+  "ClifFred:  (X ^ Y) _| Z =  X _| (Y _| Z) "; 
+  assert GA.rev(GA.wedge(Z, Y)) == GA.wedge(GA.rev(Y), GA.rev(Z)), \
+  "ClifFred:  (Z ^ Y)+ = (Y+) ^ (Z+) "; 
+  assert GA.par(GA.par(Z)) == Z, \
+  "ClifFred:  (Z*)* = Z "; 
+  s = 1 - ( GA.dim - sum(GA.sigsig)//2 )%2*2;  # sign change via squared dual 
+  assert GA.dual(GA.dual(Z)) == GA.mul(GA.bld([s]), Z), \
+  "ClifFred:  (Z~)~ = +/- Z "; 
+
+# end for 
+secs = timeit.default_timer() - secs; 
+"Elapsed time in secs ", secs;  # 0.07 sec 
+
+################################################################################
+
