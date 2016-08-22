@@ -1,0 +1,243 @@
+
+################################################################################
+
+#   Python/SymPy/GAlgebra program source for numerical frame transformation 
+# and versor decomposition into fixed-axis (Givens') rotations, with demo & test 
+# harness, for real Clifford algebra  Cl(p,q,r) . 
+# Version 2.3; date: 28/07/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+
+  Assistance from Alan Cortzen and Warren D. Smith concerning the algorithms 
+for frame conversion and Givens factorisation is hereby acknowledged. 
+
+  The module was designed with portability and robustness in mind, rather than 
+optimal resource usage or serpentine virtuosity.  Time and space demands should 
+improve with tailoring specific to the language and application at hand: 
+numerical computation in SymPy currently manifests gross inefficiencies, 
+caused at least in part by inappropriate lazy evaluation.  
+Customary industrial-scale line-breaking conventions have been ignored: 
+I can't make sense of anything that doesn't fit on a single page !  
+
+  The algorithms perform reliably on numerical data: although round-off error 
+is checked, stability is in practice excellent, away from isotropic regions.  
+However (as with matrices) when both  p, q  are nonzero, normalising a versor 
+which is approaching isotropy (zero magnitude) yields large components, 
+leading to increasingly severe cancellation error. 
+
+  Compared with matrix computation, GA involves nontrivial issues concerning 
+continuity and sign, resulting in part from mismatches between left- and 
+right-hand frames, even- and odd-grade versors, etc, as discussed in the 
+specifications below.  Competent application to situations such as continuous 
+motion interpolation requires awareness of these. 
+
+  Caveat: within this module, matrices and versors compose LEFT-TO-RIGHT, eg. 
+    matrix  K  acts on row vector  v  via  v <- v K ; 
+    versor  X  transforms  Z  via  Z <- (1/X) Z X ; 
+    transformation  X  followed by  Y  requires  X Y ; 
+Use in an application with opposite conventions would require the user to 
+transpose / revert inputs and outputs, and reverse the order of compositions, 
+at the interface. [ It may be feasible to automate this pesky 4-way switch! ] 
+
+  Notation:  Cl(p,q,r)  denotes the mixed degenerate Clifford algebra with 
+components real, generators  e_i  where  i = 1,...,n , and  (e_i)^2 = 
+    +1  for  0 < i <= p , -1  for  p < i <= p+q , 0  for  p+q< i <= p+q+r = n ; 
+this ordering is required by the package. 
+O(p,q,r)  denotes the mixed orthonormal group of square matrices, acting on 
+row vectors of dimension  n , and preserving the corresponding (metric) diagonal 
+matrix under conjugacy.  
+
+  Versor composition or matrix product are denoted by  X Y ; versor reversion 
+or matrix inversion by  (1/X) ; matrices and versors are usually implicitly 
+normalised, with magnitude  ||X|| in {+1, -1, 0}  as appropriate. 
+Grade-k  subvector by  <X>_k .  Addition by  X+Y  or  X-Y  as usual: 
+note that this operation does not preserve versors, and is not preserved 
+under the homomorphism from normalised versors to orthonormal matrices. 
+
+################################################################################
+
+  Specifications and algorithmic details follow: the principal functions are 
+    frame_transform_versor(), 
+    givens_factor_matrix(),  
+    givens_factor_versor(),  
+each equipped with verbose option for demonstration and debugging.  
+Below the fold the source comprises a substantial testbed harness: 
+    spin_disc(), 
+    test_main() 
+contain examples of usage of the principal functions. 
+
+
+  Variable:  eps = 1.0E-12 
+
+  Usage:  Determines the (absolute) rounding error considered acceptable; 
+default assumes double-length real precision (64-bit floating-point). 
+Norms and components smaller than this quantity are interpreted as zero; 
+"equality" between numerical  b, c  is implemented as  |b - c| < eps . 
+
+
+  Function:  versor_to_matrix (X), matrix_to_versor (A, Z0 = 0) 
+
+  Input & output:  normalised versor & corresponding matrix, or vice-versa. 
+
+  Method:  The former is trivial: matrix entry  A_ij  is simply the component 
+of  e_i  in the action of  X  on  e_j .  The latter in contrast employs 
+frame_transform_versor()  to transform the unit frame into one whose vectors are 
+the rows of  A ; therefore the same continuity and sign issues are involved. 
+
+
+  Function: frame_transform_versor (F, G, verb = False, Z0 = 0) 
+
+  Input:  Orthonormal numerical versors  F_1 .. F_n ; G_1 .. G_n  in  
+Cl(n, p, q) ; optional boolean  verb  invokes verbosity;  
+Z0  recalls previous output. 
+
+  Output:  Normal versor  Z  such that  G_k = (1/Z) F_k Z  for  k = 1 ..n . 
+An error message results if output rounding error exceeds global bound  eps , 
+frame signatures are incompatible, or continuity cannot be established. 
+
+  Method:  At stage  k  start,  t (1/Z) F_k Z_k = G_i  for  i < k , and is orthogonal to  G_1 .. G_(k-1)  for  i >= k .  Versor  R_k  transforms  H_k  
+into  G_k  without altering  H_1 .. H_(k-1) : if angle  u  between them exceeds 
+threshold (say  pi/8 ) assign reflection  R , otherwise rotation ; 	 --- ?? 
+this avoids singularities at  u = 0, pi  for reflection, rotation resp. 
+
+  s,t  track sign-change due to reflection at stage  k  and overall resp. 
+Pseudocode below omits implicit renormalisation, and error / continuity checks.  
+Note that finally at  k = n , always  R = +/-1  approx. 
+
+  Pseudocode: 
+  
+    Z := I;  t := 1; 
+    FOR  k := 1 .. n  DO 
+      H_k := t <(1/Z) F_i Z>_1; 
+      R1 := G_k - H_k;  m1 := ||R1||;  n1 := min(|m1|, 1.0/|m1|); 
+      R2 := 1 + H_k G_k;  m2 := ||R2||;  n2 := min(|m2|, 1.0/|m2|); 
+      IF  max(n1, n2) < 0  # if signatures clash or both isotropic, 
+      THEN  R_k := 1;  s := 1;  # copy across 
+      ELIF  n1 > n2  # else stabler of 
+      THEN  R_k := R1;  s := -sign(m1);  # co-point reflection 
+      ELSE  R_k := R2;  s := sign(m2);  FI  # co-line rotation 
+      Z := Z R_k;  t := t*s;  # accumulated transform & sign 
+    OD  # finally  (1/Z) F Z  =  +/-G ,  Z  =  prod_k R ; 
+
+    IF  t < 0  # perhaps fix wrong signs (isotropic case?) 
+    THEN  Z := Z e_1 ... e_(p+q);  FI 
+
+  Sign and continuity issues:  Frames  F, G  may have mismatched senses: one 
+left- and the other right-handed, their corresponding orthonormal matrices 
+having different determinants; or otherwise incompatible isotropic generator 
+signs.  Regardless, on termination of the loop above, the result may be  H = -G  
+instead: when  p  is even and  r  zero, this is corrected via replacing  Z  
+with its dual. Similarly, when  p  is odd and  r  nonzero, the sign of all 
+isotropics alone may be corrected via the non-isotropic partial dual (currently 
+unimplemented).  Unreconcilable sign mismatches report a large final error.  
+
+  Again, the sign of  Z  as earlier computed may flip randomly in the course of 
+a sequence of transformations intended by the user to approximate continuity. 
+To avoid this, option  Z0  should be loaded with the previous output: either 
+the algorithm  adjusts the output sign to match, or an error message results. 
+Furthermore when  p  is odd, it is possible that  Z  might flip between 
+the expected versor and its dual: to maintain continuity, the algorithm 
+adjusts this situation as well. [ Truly, nothing is simple! ] 
+
+
+  Function: givens_factor_matrix (B, verb = False) 
+
+  Input:  Orthonormal order-n  matrix  B ; optional boolean  verb  invokes 
+verbosity. 
+
+  Output:  Sequence of Givens' rotations  R_k  such that  B = |B| R_1 .. R_m , 
+where  m = n(n-1)/2 .  An error message results if output rounding error 
+exceeds global bound  eps . 
+
+  Method:  With  A = (1/B)  initially, at stage  k  clear some  A_ij := 0  
+in the upper triangle  i < j  via post-multiplication by Givens' rotation  
+R_ij(u_k) .  Orthonormality is conserved; finally the upper triangle 
+is empty, and via orthogonality so is the lower, and  A  has been reduced 
+to unit matrix.  
+
+  Sequence  (i,j)_k  is designed to avoid overwriting previously established 
+zeros, in either upper or lower triangle: this method utilises 
+    (i,j)  =  (1,2), (1,3), (2,3), (1,4), (2,4), (3,4), ...  
+Both angles  u, u+pi  clear entry  A_ij  equally effectively: the choice made 
+ensures  B_ii > 0  subsequently, so that the diagonal becomes finally positive. 
+
+  Pseudocode:  
+    A := B;  C := I;  
+    FOR  j := 1 .. n  DO  FOR  i := 1 .. j-1  DO  
+        R_k := givens(i, j, A_ii, A_ij); 
+        A := A R_k;  C := (1/R_k) C ;  OD OD  # new A_ij = 0 , A_ii > 0 
+    # finally  A = diag(1, ..., 1, +/-1) ,  C = B  (except row  n ?) 
+
+  Here  givens(i, j, t, s)  denotes Givens' matrix  R_ij(u) , representing 
+rotation, boost, translation, offset etc. in the  (x_i, x_j)-plane through 
+extent specified by ratio  s/t : eg. in the case of rotation, through angle  
+2 arctan(s/t) .  The components are those of the unit matrix, excepting 
+    R_ii = t/d ,  R_jj = t/d ,  R_ij = -s/d ,  R_ji = (e_i)^2 (e_j)^2 s/d ; 
+    where  d = sqrt| (e_j)^2 s - (e_i)^2 t | , or  1  if this vanishes. 
+Post-multiplication by  R  alters only columns  i,j  of  A , and conserves 
+orthonormality.  The inverse components are the same, except for  R_ij, R_ji  
+which are negated. 
+
+  Sign issues:  Product  R_1 .. R_m = B  when  B  is special, representing a 
+direct, "orientation-preserving" isometry, with determinant  |B| = 1 ; 
+otherwise  R_1 .. R_m = -B . 			 case |B| = 0  --- FIX ?? 
+
+
+  Function:  givens_factor_versor (Y, verb = False) 
+
+  Input:  spherical versor  Y  in dimension  n ; optional boolean  verb  
+invokes verbosity. 
+
+  Output:  Sequence of grade-2 Givens'  R_k  such that  Y = R_1 .. R_m M , 
+where  m = n(n-1)/2 , and  M = 1 or e_1 .  An error message (or two) results 
+if output rounding error exceeds global bound  eps . 
+
+  Method:  Y  is made even-grade by multiplication by  e_1  if necessary, 
+converted to matrix for  givens_factor_matrix()  to process, the result 
+converted back via  matrix_to_versor() .  
+
+  Sign issues:  When  Y  has even grade, the product may fail to have the same 
+sign as  Y , and the sign of  R_m  is adjusted to correct this.  
+
+
+  Function:  rand_versor (l), rand_matrix (l) 
+
+  Input:  number of linear factors, usually  l = n  or  l = n-1 . 
+
+  Output:  random normalised versor or orthonormal matrix. 
+
+  Method:  A naïve algorithm would simply return the product  Z = X_1 ... X_l , 
+where each vector  X_i  has components distributed uniformly in the signed unit 
+interval, via rand_vector().  This is unsatisfactory for hyperbolic versors: 
+the result converges rapidly towards an isotropic limit.  Instead return the 
+the product of  [l/2]  rotations or boosts of form  1 + X Y  for   X, Y 
+random vectors, together with a single extra random vector if  l  is odd.  
+
+  For a random matrix, first generate a random versor, then convert via 
+versor_to_matrix().  No effort is made to randomise the sign when  l, n  
+are both odd. 
+    
+
+  Function:  instantiate_GA (siglis)  
+
+  Input:  list comprising  +1,-1,0's  specifying squares of generators. 
+
+  Output:  Assigns to global variables GA, n, m, gene[], sigs[] ; 
+assigns default identifiers  e1, e2, ...  to generators. 
+Generator variables and signatures are cached in  gene[], sigs[]  resp.  
+
+
+  Function:  test_main () 
+
+  Output:  Verbose printout from the 3 principal functions, illustrating their 
+methods in operation.  Source code comprises simple examples of their usage. 
+
+
+  Function:  spin_disc (l = 20)  
+
+  Input:  Number of steps  l  of rotation demo (default  20 ) 
+
+  Output:  Printout illustrating spin continuity under continuous rotation, 
+and matrix-versor relationship.  Source code contains examples of usage. 
+
+
+################################################################################
+
