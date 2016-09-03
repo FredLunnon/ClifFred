@@ -2,7 +2,7 @@
 ################################################################################
 
 #   "ClifFred" Python source for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.1; date: 20/08/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.1; date: 26/08/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_multor.py 
 
@@ -43,7 +43,8 @@ def binom (n, m) :  # local j, pro;
 
 class ClifFred : 
   
-  def __init__(GA, siglis0 = [], siglis1 = []) :  # local j, k; 
+  def __init__(GA, siglis0 = [], siglis1 = []) :  
+    # local j,k; # global eps,J; 
     GA.init(siglis0, siglis1);  # table set-up 
     GA.J = GA.bld([1]);  # quasi-pseudar 
     k = 0; 
@@ -72,7 +73,7 @@ class ClifFred :
   # Instantiate Clifford algebra, signature list comprising  +1,-1,0's 
   def init (GA, siglis0 = [], siglis1 = []) : 
     # local h,i,j,k,l,m,n,monh,moni,monj,t,sig,sig1; 
-    # global dim,len,pow,bin,gensig,sigsig,mongo,gramon,offmon,siggo,doggo,leng3,ctrg3,ilisg3,jlisg3,hlisg3,slisg3; 
+    # global dim,len,pow,bin,gensig,genlis,sigsig,mongo,gramon,offmon,siggo,doggo,leng3,ctrg3,ilisg3,jlisg3,hlisg3,slisg3; 
     GA.dim = len(siglis0);  # vector dimension 
     GA.bin = [ binom(GA.dim,k) for k in range(0, GA.dim+1) ];  # grade lengths 
     GA.pow = [ 2**k for k in range(0, GA.dim+1) ];  # binary powers 
@@ -81,7 +82,9 @@ class ClifFred :
     # Generator signatures and their signs, extended optionally 
     GA.gensig = copy(siglis0); 
     GA.sigsig = siglis1 + [ siglis0[i] if siglis0[i] <> 0 else +1 if i >= len(siglis1) else siglis1[i] for i in range(len(siglis1), len(siglis0)) ]; 
-        
+    # Unit vectors  e1, .., en ?? 
+    GA.genlis = [ [ [ ] ] + [ [ 1 if j == k else 0 for j in range(0, GA.dim) ] ] + [ [ ] for l in range(2, GA.dim+1) ] for k in range(0, GA.dim) ]; 
+
     # Monomial array and inverse, indexed by grade/offset 
     GA.mongo = [ [ None for i in range(0, GA.bin[k]) ] for k in range(0, GA.dim+1) ]; 
     GA.gramon = [ None for j in range(0, GA.len) ]; 
@@ -147,30 +150,31 @@ class ClifFred :
     return None; # end def 
   
   
-  # Extract  k-grator  <X>_k  of multor  X  qua list 
-  def lis (GA, X, k = 0) :  # global dim,bin; 
-    return copy(X[k]) if 0 <= k and k <= GA.dim else [];  # end def 
+  # Extract  k-grator  <X>_k  of multor  X  qua list, expanding empty 
+  def lis (GA, X, k = 0) :  # local h; # global dim,bin; 
+    return [] if 0 > k or k > GA.dim else copy(X[k]) if X[k] <> 0 else [ 0 for h in range(0, GA.bin[m]) ]; # end def 
   
   # Grades  <X>_k  of multor  X  for all  k ,  k = lo ,  lo <= k <= hi ; 
   def gra (GA, X, lo = None, hi = None) : 
     # local i,k,Z; global dim,bin; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for k in range(0, GA.dim+1) ]; 
     for k in range(max(lo,0), min(hi,GA.dim)+1) : 
       Z[k] = copy(X[k]); # end for 
     return Z; # end def 
-    
+  
   # Unit vector multor: return  Z = e_k , 1 <= k <= dim ; 
   def gen (GA, k) : 
     # local l,j; global dim,bin; 
-    return [ [ ] ] + [ [ 1 if j == k-1 else 0 for j in range(0, GA.dim) ] ] + [ [ ] for l in range(2, GA.dim+1) ]; # end def 
+    return copy(GA.genlis[k-1]); # end def 
   
-  # Create multor from k-grator list  <X>_k 
-  def bld (GA, Xk_lis, k = 0) : 
-    # local i,l,Z; global dim,bin; 
+  # Create multor from k-grator list  <X>_k ; list length check 
+  def bld (GA, Xk_lis = [], k = 0) : 
+    # local i,Z; global dim,bin; 
+    assert 0 <= k and k <= GA.dim and (len(Xk_lis) == GA.bin[k] or len(Xk_lis) == 0), " grade or length wrong ";  # , k, GA.bin[k], len(Xk_lis)  o/p ?? 
     Z = [ [ ] for l in range(0, GA.dim+1) ]; 
-    if 0 <= k and k <= GA.dim : Z[k] = copy(Xk_lis); 
+    Z[k] = copy(Xk_lis); 
     return Z;  # end def 
   
   # Magnitude  ||X||  of multor  X 
@@ -182,12 +186,12 @@ class ClifFred :
         for i in range(0, GA.bin[k]) :  # move up ?? 
           s = s + GA.siggo[k][i]*X[k][i]**2 
       # end if end for 
-    return s;  # end def 
+    return s; # end def 
   
   # Reversion (main anti-automorphism)  X+  of multor  X 
   def rev (GA, X, lo = None, hi = None) : 
     # local i,k,sig,Z; global dim,bin; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for k in range(0, GA.dim+1) ]; 
     for k in range(max(lo,0), min(hi,GA.dim)+1) : 
@@ -200,7 +204,7 @@ class ClifFred :
   # Parity transform (main automorphism)  X*  of multor  X 
   def par (GA, X, lo = None, hi = None) : 
     # local i,k,sig,Z; global dim,bin; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for k in range(0, GA.dim+1) ]; 
     for k in range(max(lo,0), min(hi,GA.dim)+1) : 
@@ -212,9 +216,11 @@ class ClifFred :
     return Z; # end def 
   
   # Dual  Z  of multor  X  (combinatorial: null signatures signed!) 
-  def dual (GA, X) : 
+  def dual (GA, X, lo = None, hi = None) : 
     # local i,j,k,Z; global dim,bin,siggo,doggo; 
-    Z = [ [ ] for l in range(0, GA.dim+1) ]; 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
+    elif hi is None : hi = lo; # end if 
+    Z = [ [ ] for l in range(max(GA.dim-hi,0), min(GA.dim-lo,GA.dim)+1) ]; 
     for k in range(0, GA.dim+1) : 
       if X[k] <> [ ] : 
         j = GA.bin[k]-1;  #  j = GA.bin[m] 
@@ -225,7 +231,7 @@ class ClifFred :
   # Add multors: return  Z = X + Y 
   def add (GA, X, Y, lo = None, hi = None) : 
     # local i,k,Z; global dim,bin; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for k in range(0, GA.dim+1) ]; 
     for k in range(max(lo,0), min(hi,GA.dim)+1) : 
@@ -238,7 +244,7 @@ class ClifFred :
   # Subtract multors: return  Z = X - Y 
   def sub (GA, X, Y, lo = None, hi = None) : 
     # local i,k,Z; global dim,bin; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for k in range(0, GA.dim+1) ]; 
     for k in range(max(lo,0), min(hi,GA.dim)+1) : 
@@ -253,7 +259,7 @@ class ClifFred :
   def mul (GA, X, Y, lo = None, hi = None) : 
     # global dim,bin,leng3,ilisg3,jlisg3,hlisg3,slisg3; 
     # local i,j,k,l,m,h,s,t,Z,Zmlk,hlis,ilis,jlis,slis; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for m in range(0, GA.dim+1) ]; 
     for m in range(max(lo,0), min(hi,GA.dim)+1) : 
@@ -273,7 +279,7 @@ class ClifFred :
   
   # Dual multiply: return  Z = (X~ Y~)~ , grades  lo  to  hi  inclusive 
   def lum (GA, X, Y, lo = None, hi = None) : 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     return GA.dual(GA.mul(GA.dual(X), GA.dual(Y), GA.dim-hi, GA.dim-lo));  # end def 
   
@@ -310,7 +316,7 @@ class ClifFred :
   # Naive inner (fat-dot) product: return  Z = X . Y = \sum_k,l < <X>_k <Y>_l >_|k-l|  
   def dot0 (GA, X, Y) : 
     # local k,l,Z; 
-    Z = GA.bld([0]); 
+    Z = GA.bld(); 
     for l in range(0, GA.dim+1) : 
       for k in range(0, GA.dim+1) : 
         Z = GA.add(Z, GA.mul(GA.gra(X, k), GA.gra(Y, l), abs(k-l))); 
@@ -320,7 +326,7 @@ class ClifFred :
   # Naive scalar product: return  Z = X * Y = \sum_k,l < <X>_k <Y>_l >_0  
   def scalar0 (GA, X, Y) : 
     # local k,l,Z; 
-    Z = GA.bld([0]); 
+    Z = GA.bld(); 
     for l in range(0, GA.dim+1) : 
       for k in range(0, GA.dim+1) : 
         Z = GA.add(Z, GA.mul(GA.gra(X, k), GA.gra(Y, l), 0)); 
@@ -332,7 +338,7 @@ class ClifFred :
   def lecon (GA, X, Y, lo = None, hi = None) : 
     # global dim,bin,leng3,ilisg3,jlisg3,hlisg3,slisg3; 
     # local i,j,k,l,m,h,s,t,Z,Zmlk,hlis,ilis,jlis,slis; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for m in range(0, GA.dim+1) ]; 
     for m in range(max(lo,0), min(hi,GA.dim)+1) : 
@@ -355,7 +361,7 @@ class ClifFred :
   def ricon (GA, X, Y, lo = None, hi = None) : 
     # global dim,bin,leng3,ilisg3,jlisg3,hlisg3,slisg3; 
     # local i,j,k,l,m,h,s,t,Z,Zmlk,hlis,ilis,jlis,slis; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for m in range(0, GA.dim+1) ]; 
     for m in range(max(lo,0), min(hi,GA.dim)+1) : 
@@ -378,7 +384,7 @@ class ClifFred :
   def wedge (GA, X, Y, lo = None, hi = None) : 
     # global dim,bin,leng3,ilisg3,jlisg3,hlisg3,slisg3; 
     # local i,j,k,l,m,h,s,t,Z,Zmlk,hlis,ilis,jlis,slis; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for m in range(0, GA.dim+1) ]; 
     for m in range(max(lo,0), min(hi,GA.dim)+1) : 
@@ -398,7 +404,7 @@ class ClifFred :
   
   # Dual outer product: return  Z = X v Y = (X~ ^ Y~)~ 
   def vee (GA, X, Y, lo = None, hi = None) : 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     return GA.dual(GA.wed(GA.dual(X), GA.dual(Y), GA.dim-hi, GA.dim-lo));  # end def 
   
@@ -407,7 +413,7 @@ class ClifFred :
   def dot (GA, X, Y, lo = None, hi = None) : 
     # global dim,bin,leng3,ilisg3,jlisg3,hlisg3,slisg3; 
     # local i,j,k,l,m,h,s,t,Z,Zmlk,hlis,ilis,jlis,slis; 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     Z = [ [ ] for m in range(0, GA.dim+1) ]; 
     for m in range(max(lo,0), min(hi,GA.dim)+1) : 
@@ -448,7 +454,7 @@ class ClifFred :
   
   # Conjugation transform of multor: return  Z = (Y+) X Y , grades  lo  to  hi  
   def form (GA, X, Y, lo = None, hi = None) : 
-    if lo is None : lo = 0; hi = GA.dim;  # all & single grade options 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
     return GA.mul(GA.mul(GA.rev(Y), X), Y, lo, hi);  # end def 
   
@@ -463,8 +469,6 @@ class ClifFred :
     Z = GA.bld([1]); 
     for i in range(0, len(Ylis)) : Z = GA.mul(Z, Ylis[i]); # end for 
     return Z; # end def 
-  
-  # Eg.  mon = 0b100011  encodes  e1 e2 e6 ; 		 --- UNTESTED ?? 
   
   # Retrieve component of monomial in  X 
   def getcom (GA, X, mon = 0) :  # local k, Xk; 
@@ -538,7 +542,7 @@ for (sigs, mags) in \
   X = GA.mullis([ GA.add(GA.bld([2]), GA.mul(GA.gen(j+1), GA.gen(i+1))) \
   for i in range(0, GA.dim) for j in range(0, i) ]); X;  
   # X = (2 + e1 e2)(2 + e1 e3)(2 + e2 e3) ... 
-  Y = GA.mullis([ GA.add(GA.bld([2]), GA.gen(i+1)) 
+  Y = GA.mullis([ GA.add(GA.bld([2]), GA.gen(i+1)) \
   for i in range(0, GA.dim) ]); Y;  # Y = (2 + e1)(2 + e2)(2 + e3) ... 
   Z = GA.mullis([ GA.add(GA.bld([2]), GA.mul(GA.bld([i+1]), GA.gen(i+1))) \
   for i in range(0, GA.dim) ]); Z;  # Z = (2 + e1)(2 + 2 e2)(2 + 3 e3) ... 
@@ -567,10 +571,16 @@ secs = timeit.default_timer() - secs;
 
 
 # TODO --- 
-# (versor) divide, pre-divide; rescale by 1/integer; normalise() 	 --- ?? 
+# (versor) divide, pre-divide; rescale by 1/integer; normalise();  --- ?? 
+#   Attach  GA.s0, GA.s1, GA.e[k]  --- ?? 
+# GA.dual() now graded, as documentation! 
+# lis() now expands empty to zeros! 
+# genlis[] now restored! 
+# bld() : now checks list length! 
 # Maybe sum, product, outer, ... accept arbitrarily many args? 
 # Rename  GA_multor.py -> ClifFred ... ?? 
 #   init() etc :  h -> k -> l -> m -> n  ... 
+#   class ClifFred (object) :  ... ? 
 
 # Polynomial I/O; default identifiers (SymPy) ? 
 #   http://mattpap.github.io/scipy-2011-tutorial/html/basics.html 

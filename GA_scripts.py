@@ -5,7 +5,7 @@
 # Version 1.1; date: 20/08/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_scripts.py 
-# Todos: optional random fl. pt. inputs? 
+# Todos: optional random fl. pt. inputs? iterative  1/X  demo? 
 
 GAS_version = 1.1;  # update !! 
 
@@ -131,7 +131,7 @@ def cyc (X) : # local X1,p,o,xx,i,r; global CPR,n,oo;
 
 # Lie product (X | Y) = -1/2(tang dist)^2, cos angle - 1, normalised. 
 def inn (X, Y) : 
-  return GA.mul(GA.rev(X), Y, 0, 0)[0][0]; # end def 
+  return GA.mul(GA.rev(X), Y, 0)[0][0]; # end def 
 
 def inn0 (X, Y) :  # local j; 
   return sum([ X[1][j]*Y[1][j]*GA.gensig[j] for j in range(0, GA.dim) ]); # end def 
@@ -289,14 +289,14 @@ if demons :
   GA = ClifFred(sigs); print "signature ", sigs; print; 
   var("a1, a2, a3, a4, b1, b2, b3, b4, c1, c2, c3, c4, d1, d2, d3, d4, \
   e1, e2, e3, e4, f1, f2, f3, f4, g1, g2, g3, g4, h1, h2, h3, h4"); 
-  A = GA.bld([a1, a2, a3, a4], 1); 
-  B = GA.bld([b1, b2, b3, b4], 1); 
-  C = GA.bld([c1, c2, c3, c4], 1); 
-  D = GA.bld([d1, d2, d3, d4], 1); 
-  E = GA.bld([e1, e2, e3, e4], 1); 
-  F = GA.bld([f1, f2, f3, f4], 1); 
-  G = GA.bld([g1, g2, g3, g4], 1); 
-  H = GA.bld([h1, h2, h3, h4], 1); 
+  A = GA.bld([a1, a2, a3], 1); # , a4 
+  B = GA.bld([b1, b2, b3], 1); # , b4 
+  C = GA.bld([c1, c2, c3], 1); # , c4 
+  D = GA.bld([d1, d2, d3], 1); # , d4 
+  E = GA.bld([e1, e2, e3], 1); # , e4 
+  F = GA.bld([f1, f2, f3], 1); # , f4 
+  G = GA.bld([g1, g2, g3], 1); # , g4 
+  H = GA.bld([h1, h2, h3], 1); # , h4 
   Xfac = [A, B, C, D]; Yfac = [E, F, G, H]; 
   
   #for (k, l) in [ (2, 2), (2, 3), (3, 2), (3, 3), (3, 4), (4, 3), (4, 4)] : 
@@ -316,6 +316,4 @@ secs = timeit.default_timer() - secs;
 print "Elapsed time in secs ", secs; 
 
 ################################################################################
-
-# Demo: invert() ; versor conservation ?? 
 

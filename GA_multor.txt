@@ -1,6 +1,6 @@
 
 #   "ClifFred" documentation for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.1; date: 20/08/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.1; date: 26/08/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 
 			Introduction 
          		____________ 
@@ -32,6 +32,7 @@ combinations may be found at
     https: //github.com/brombo/galgebra 
         [ <GAlgebra> , Alan Bromborsky]; 
     http://clifford.readthedocs.io/en/latest/ 
+    https://github.com/arsenovic/clifford 
         [ <clifford> , Robert Kern]; 
     https://documen.tician.de/pymbolic/geometric-algebra.html 
         [ <pymbolic> , Andreas Kloeckner]. 
@@ -60,9 +61,9 @@ returned; if just  k  is set, that grade is returned; if both are set, grades
 from  k  to  l  inclusive are returned.  
 
   Z = GA.gra(X, k, l) 		Z := <X>_k 	extract grades, graded  
-  Lk = GA.lis(X, k) 		[...] := <X>_k 	coerce from grade k to list 
+  Lk = GA.lis(X, k) 		[...] := <X>_k 	coerce grade k to comp list 
   Z = GA.gen(k) 		Z := e_k 	build unit vector 
-  Z = GA.bld([a,...,c], k)     	<Z>_k := [...] 	coerce from list to grade k  
+  Z = GA.bld(list = [], k = 0)  <Z>_k := [...] 	coerce comp list to grade k  
   Z = GA.mag2(X) 		Z := ||X|| 	magnitude 
   Z = GA.rev(X, k, l) 		Z := X+  	reversion, graded 
   Z = GA.par(X, k, l) 		Z := X*  	parity involution, graded 
@@ -92,7 +93,8 @@ implementation of Clifford multiplication are omitted here and not supported. ]
   GA.len 		multor dimension  2^n  of algebra 
   GA.pow[k] 		binary mask digit  2^k 
   GA.bin[k] 		length  n_C_k  of grade  k  (binomial coefficient)  
-  GA.gensig[i-1]	signature  e_i e_i  of generator  e_i  
+  GA.genlis[i-1]	generator  e_i ,  1 <= i <= k  
+  GA.gensig[i-1]	signature  e_i e_i  of  e_i  
   GA.sigsig[i-1]	(nonzero) sign of signature of  e_i  
   GA.mongo[k][t] 	monomial  m  binary-encoded as an integer, 
                         at offset  t  in grade  k ,  0 <= t < bin[k] 
