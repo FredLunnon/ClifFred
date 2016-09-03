@@ -7,7 +7,7 @@
 # Version 3.1; date: 30/07/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 
 # In command window execute: 
-#     cd /Users/fred/fred/python; python -i frames_givens_demo.py 
+#     cd /Users/fred/fred/python; python -i GA_givens.py 
 # or
 #     cd /Users/fred/fred/python; python 
 #     from frames_givens_demo import *; 
@@ -46,7 +46,7 @@ def frame_transform_versor (F, G, verb = False, Z0 = 0) :
   Z = GA.bld([1.0]);  t = 1;  # main loop 
   for k in range(0, GA.dim) : 
     #Hk = GA.mul(GA.bld([t]), GA.gra(GA.mul(GA.mul(GA.rev(Z), F[k]), Z), 1)); 
-    Hk = GA.mul(GA.bld([t]), GA.form(F[k], Z, 1, 1)); 
+    Hk = GA.mul(GA.bld([t]), GA.form(F[k], Z, 1)); 
     R1 = GA.sub(G[k], Hk); m1 = GA.mag2(R1); 
     R2 = GA.add(GA.bld([GA.mag2(G[k])]), GA.mul(Hk, G[k])); m2 = GA.mag2(R2); 
     n1 = 0 if m1 == 0 else min(abs(m1), 1.0/abs(m1)); # end if 
@@ -284,7 +284,7 @@ def spin_disc (l = 20) :
   R_k = GA.rev(R); 
   X = rand_versor(1); 
   for k in range(0, l+3) : 
-    R_k = GA.mul(R_k, R); X = GA.form(X, R, 1, 1); 
+    R_k = GA.mul(R_k, R); X = GA.form(X, R, 1); 
     print k; print X; print R_k; print; # end for end def 
   
   # spin continuity enforced during matrix conversion to versor; 
@@ -329,9 +329,9 @@ print "Elapsed time in secs ", secs;
 #   Query: givens_factor_versor() succeeds though givens_factor_matrix() fails! 
 # Wrappers & times for GA_multor; GAlgebra, Clifford ... ?? 
 #   Time 18.75 sec -> 6.47 : compare GAlgebra ~141.0 / 21.8 ; printing ~0.1 sec?  
-# Set 1 & unit vectors ??  Use  GA.form()  ?? 
+# Preset 1 & unit vectors ? 
 # Document: switches, wrappers !! 
 # Link switches to command line? 
 # Use  NumPy  matrices, multi-prec? 
-# Use mullis, addlis; from_zero() , from_prop() ?? 
+# Use mullis(), addlis() ; zero() , prop() ?? 
 
