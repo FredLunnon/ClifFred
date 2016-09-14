@@ -6,7 +6,8 @@
 
   The Python GA package  <clifford>  implements an uncommon operation: 
 Clifford division, essentially the inverse of a general multor (when such 
-exists).  Although the program itself seems to work correctly, current documentation claims that left-inverse and right-inverse are distinct; 
+exists).  Although the program itself seems to work correctly, current 
+documentation claims that left-inverse and right-inverse are distinct; 
 and moreover introduces five different identifiers for just two separate 
 functions.  
 
