@@ -1,0 +1,150 @@
+
+################################################################################
+
+		A Note on Duality and Magnitude I 
+
+  In his pioneering investigations into Clifford algebras, Hestenes made 
+use of two special properties of magnitude and duality: for versor (product of 
+grade-1  subvectors)  X  in  Cl(p,q,0) , 
+    ||X||  =  X~ X ;  and  X*  =  X J ,  or  X*  =  -J X ,  or  ... ; 
+where  Z~  and  Z*  denote reversion (adjoint) and duality operators, and 
+J  is (some) pseudoscalar.  In fact he went further than using, to interpreting 
+these properties as definitions. 
+  The suggestion I want to put forward here is that, while this device may 
+be mathematically elegant, it is ultimately computationally inefficient, 
+unnecessarily restrictive, and inappropriate in more general situations.  
+Specifically, its apparent adoption by the GAlgebra system is resulting in 
+avoidable failures. 
+
+  Consider a numerical computation involving approximate real (floating-point) 
+quantities.  For  X  a computed versor,  X~ X  will differ from an exact scalar 
+by some small rounding error: however  ||X||  is still accurately represented 
+by  <X~ X>_0 .  Again, when  X(t)  is a continuous function, the size of its 
+increment should still be represented by  ||X(t + dt) - X(t)|| , although that 
+increment is no longer even approximately a versor.  For arbitrary  X  these 
+requirements are satisfied simply and economically by redefining 
+
+***  ||X||  is a signed sum of all squared components, 
+     the precomputed `sign' for each component being  M~ M  
+     where  M  denotes the corresponding monomial.  *** 
+     
+Currently GAlgebra  norm(X)  fails with an error report unless  X  is an 
+exact versor, rendering it useless for numerical purposes. 
+
+  Regarding duality, what applications come to mind?  I can summon --- 
+
+  Ex. (1) : generalised Apollonian problem in  3-space Lie-sphere geometry. 
+The appropriate algebra is  Cl(4,2,0)  [which physicists confusingly 
+denote `conformal', styling proper conformal algebra  Cl(3,1,0)  `Minkowski'].  
+Extrinsically oriented  spheres are represented by grade-1  subvectors; the 
+pair of spheres tangent to  4  given spheres  X_1,...,X_4  are eigencycles 
+of exterior product dual  (X_1 ^ ... ^ X_4)* . 
+
+  Ex. (2) : subspace intersection and union (closure) in  3-space Euclidean 
+geometry.  The appropriate algebra is  Cl(3,0,1)  [which should not be 
+confused with commonly misnamed  Cl(3,0,0) , quaternions etc doubly covering 
+isometries of a sphere centred at the origin].  Subspaces of dimension  k  are 
+represented by grade-(4-k) versor subvectors; geometric duality exchanges 
+each  k-subspace with an orthogonal  (3-k)-subspace.  The intersection of 
+subspaces  X,Y  is given by  X ^ Y ; the union should be given by (X* ^ Y*)* . 
+
+  In ex. (2) the current dual fails, since it deletes all components with 
+zero `sign' [indeed, GAlgebra simply refuses to instantiate the degenerate 
+algebra at all, though nanny can be circumvented by instead assigning a tiny 
+square to the generator].  However in both examples geometrically meaningful 
+results follow from redefinition  
+
+***  X*  is the reversion of the `reversal' of  X , constructed 
+     by exchanging components having complementary monomials.  *** 
+
+  Furthermore, GAlgebra generalises Hestenes' definitions to permit (dynamic) 
+metrics specified by arbitrary diagonal or symmetric matrices.  It is unclear 
+to me what geometrical significance duality might now possess; I am unable to 
+envisage a situation in which the current definition could produce meaningful 
+results.  The manual lists 8 microscopically different options for duality, 
+which serves only to reinforce my impression that the existing definition is 
+unfit for this extended purpose!  [ The new definition is incompatible with 
+all those options for various  Cl(p,q,0) , though not in any geometrically 
+significant fashion. ]  
+
+  [ Remark that the exterior product --- defined as the maximal grade subvector 
+of the Clifford product --- is not well-defined for numerical approximations, 
+without the intended grade being supplied explicitly. ] 
+
+  I invite comments on these proposals.  In particular, I have not attempted 
+to generalise them to arbitrary metrics, in the hope of securing advice from 
+persons more familiar than myself with relevant applications. 
+
+Fred Lunnon [08/07/16] 
+
+################################################################################
+
+		A Note on Duality and Magnitude II 
+
+  The previous post on this topic (July 31) might reasonably be categorised 
+as a great pile of wombat's do's, for which apologies are hereby proffered. 
+[ It managed simultaneously to ignore (1) an earlier warning that Cl(p,0,r)  
+and  Cl(0,q,r)  duality appeared incompatible; (2) the Lie-sphere application 
+of  Cl(n,2,0)  duality earlier mentioned, for which the proposed redefinition 
+obviously failed; and (3) a nagging suspicion that it might be cobblers, 
+which some temporary brainstorm prevented substantiating. ]  
+
+  Implementing duality for my Python GA engine soon exposed the foul-up, 
+obliging me to put the whole business on a firmer foundation.  One difficulty 
+is the previously lamented paucity of test-bed applications: I know of only 
+Euclidean/projective correlation and Lie-sphere Apollonian problem; surely 
+there must be other applications for duality out there somewhere? 
+
+  Anyway, making the best of what is available, reason as follows.  Consider 
+the generalisation of Clifford algebra to a "diagonal metric", as offered 
+by GAlgebra, with squares of generators  e_i  permitted to take arbitrary 
+real values  s_i .  
+
+  Duality should associate each monomial with the previous coefficient of its 
+complement.  There must be _no_ rescaling involving  |s_i| , otherwise when 
+any  s_i = 0 , duality might no longer be self-inverse; the only remaining 
+choice involves the _order_ in which the generators appear in each monomial, 
+hence the _sign_ to be associated with each coefficient.  
+
+  A simple way to define these signs in the regular case (all  s_i <> 0 ) is: 
+  
+    ***  Temporarily replace every  s_i  by  sign(s_i) in {+1, -1} ;  *** 
+    ***  then multiply by  J = e_1 ... e_n  (as per Hestenes).        *** 
+
+[ This definition does _not_ constitute an algorithmically satisfactory 
+implementation strategy! ]  But if  s_i = 0 , how is its sign to be chosen?  
+
+  Consider a situation in which  s_i -> 0 : in the limit its sign equals 
++1  or  -1 , according to whether  s_i > 0  or  s_i < 0  respectively --- 
+ignoring mischievous situations where it might wobble about.  In the case 
+of d-space projective geometry, either  Cl(d,0,1)  or  Cl(0,d,1)  is a 
+suitable algebra: but the isotropic generator requires signature  +0  in 
+the former,  -0  in the latter. 
+
+  So for the purpose of defining duality, the unexpected conclusion is that: 
+  
+    ***  The user must specify signs for isotropic generators explicitly!  *** 
+
+[ The interface aspect is a little awkward to design cleanly: in my engine 
+the instantiator optionally takes two arrays of signatures, the second of 
+which specifies signs for any zeros occurring in the first (but is elsewhere 
+ignored); otherwise unspecified signs default to  +1 . ] 
+
+  Needless to say, this time around, the theory has been tested as far as 
+currently practicable.  But for all this faffing about, I still have yet 
+to discover an application for any  Cl(p,q,r)  with _all_ of  p,q,r > 0 ?! 
+
+  In the most general quadratic situation where the metric is specified via 
+symmetric order-n matrix  B , there exist orthonormal  Q, Q'  with  
+Q' B Q  diagonal; and order-2^n matrices, combining  k-th compound blocks 
+of  Q, Q'  for  0 <= k <= n , transform an entire multivector to the 
+corresponding diagonal algebra.  In this fashion, questions concerning 
+(in particular) duality are (in principle) reducible to the diagonal case. 
+
+  [ In more detail,  Q  and its adjoint Q' may be chosen orthonormal, 
+either with respect to the current metric when it is computed via frame 
+transformation, or to the spherical metric  Cl(n)  when it is computed 
+--- less conveniently but more robustly --- via singular value decomposition. ]  
+
+Fred Lunnon [06/08/16] 
+

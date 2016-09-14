@@ -1,0 +1,113 @@
+
+################################################################################
+
+        The Multiplicative Inverse in Clifford Algebras 
+        ----------------------------------------------- 
+
+  The Python GA package  <clifford>  implements an uncommon operation: 
+Clifford division, essentially the inverse of a general multor (when such 
+exists).  Although the program itself seems to work correctly, current documentation claims that left-inverse and right-inverse are distinct; 
+and moreover introduces five different identifiers for just two separate 
+functions.  
+
+  A casual trial suggests that --- on the contrary --- all produce essentially 
+identical results, and just a single function is required.  However, proving 
+that the inverse is actually unique and two-sided is not straightforward; 
+so I am taking the opportunity to discuss this topic, which is evidently 
+not widely understood.  
+
+  The obscurity is understandable, since division at present lacks practical 
+application, so its pursuit is at present of purely theoretical interest --- 
+as far as I know, though I should be happy to be contradicted!  Geometrical 
+applications are concerned with versors or numerical approximations to them, 
+for which the inverse equals simply the reversion (adjoint) divided by the 
+magnitude; it exists just for magnitude nonzero, and can straightforwardly 
+be proved unique and two-sided. 
+
+  Further insight unfortunately demands stepping outside the GA framework, 
+to involve the matrix representation credited to Atiyah-Bott-Shapiro, 
+and discussed subsequently by many authors at many levels: see eg. 
+    G. N. Hile, Pertti Lounesto 
+    "Matrix Representations of Clifford Algebras" 
+    Linear Algebra and its Applications vol 128 51--63 (1990) 
+free online at 
+    http://ac.els-cdn.com/002437959090282H/1-s2.0-002437959090282H-main.pdf 
+
+  The gist of this remarkable construction is that every nondegenerate 
+algebra  Cl(p,q)  with real components is isomorphic to square matrices (or 
+their doubles), with components either real, complex or quaternion, and order  
+m ~ 2^(n/2)  approx. where  n = p+q .  For example when  q = p , algebra 
+Cl(p,p)  is equivalent to real matrices of order  m = 2^p , addition and 
+multiplication corresponding.  
+
+  But matrices have another life, representing linear transformations of a 
+vector space (in dimension  m >> n  now), matrix product corresponding to 
+composition of transformations.  From this it follows that they constitute a 
+_group_ under multiplication: in particular just when the determinant is 
+nonzero, the matrix inverse exists, is two-sided and unique --- because both 
+matrix and inverse represent the same bijection between vectors, albeit in 
+opposite directions! 
+
+  Equivalently, the Clifford inverse exists, and is two-sided and unique, 
+just when its matrix determinant is nonzero; it could in principle be computed 
+via matrix inversion combined with conversion between Clifford algebra and 
+matrix representation.  However a more brute-force approach is in practice 
+much simpler (and probably just as effective): express GA equation  X Y = 1  
+as linear simultaneous equations in  2^n  unknown components of  Y  with  X  
+given, then solve numerically yielding GA inverse  Y  of  X .  
+
+  Matrix null space and SVD could be employed in a similar fashion to compute 
+co-divisors of zero for a multor without inverse.  The upshot is that for any 
+X  there exists some  Y <> 0  such that  X Y = c , a scalar which may further 
+be restricted to  {1, 0} ; if  c <> 0  then  Y  is unique, if  c = 0  then  X  
+is a divisor of zero and  Y  can be chosen arbitrarily within the null space. 
+
+  Note that there is in general no alternative to computing a determinant for 
+establishing invertibility: nonzero magnitude does not guarantee invertibility, 
+nor does zero magnitude preclude it.  Counter-examples in  Cl(1,1)  are 
+
+    e e = 1 ;  ||1 + e|| = 2 ;  (1 + e)(1 - e)/2 = 0 . 
+    f f = -1 ;  ||1 + f|| = 0 ;  (1 + f)(1 - f)/2 = 1 . 
+
+  Degenerate algebras present an extra obstruction to proving two-sidedness 
+(though not to actually computing the inverse) since faithful representations 
+no longer exist.  This awkward fact is a consequence of an ideal-theory notion, 
+the _Jacobson radical_, which is trivial in a full matrix algebra (or in its 
+double?), but nontrivial in a degenerate GA. 
+
+  Instead  Cl(p,q,r)  is isomorphically embedded within larger non-degenerate  
+Cl(p+r,q+r) , via mapping each isotropic generator to the sum of a new pair 
+with opposite signatures thus:  
+
+    e e = 0 ,  f' f' = +1 ,  g' g' = -1 ;  e <-> f' + g' . 
+
+Now we argue that  X Y = c , where  c  has the same value in both algebras; 
+if  c = 0  then  X  is noninvertible in both; if  c = 1  then  X  has a unique 
+two-sided inverse in the new algebra, hence also in the old via isomorphism. 
+See 
+    Rafal Ablamowicz 
+    "Structure of spin groups associated with degenerate Clifford algebras" 
+    J. Math. Phys. 27, 1 (1986) 
+
+  Finally, for particular  Cl(p,q,r)  in low dimension  n = p+q+r  it is 
+feasible to take advantage of the structure of equations  X Y = c  to write 
+down explicit a symbolic solution for  Y  in terms of  X , avoiding the 
+necessity for cumbersome numerical solving: however manipulating the result 
+into compact form convenient for computation is nontrivial.  See discussions at 
+    http://www.euclideanspace.com/maths/algebra/clifford/algebra/functions/inverse/manfred.htm 
+    http://www.iancgbell.clara.net/maths/geoalg.htm 
+
+  In particular for general multor  X in Cl(p,q,r)  with rank  n = p+q+r <= 4 , 
+determinant (proportional to)  c  and cofactor  Y  such that  X Y = c  are 
+given simply by 
+    c  =  < X X+ >_0 ;  Y  =  (X+) (2 c - X X+) ; 
+and the inverse if it exists by  1/X = Y/c , where  X+  denotes reversion. 
+A program verifying this symbolically for each of  15  distinct signatures will 
+shortly become available elsewhere; the determinant expands to a polynomial in 
+the components of  X  with up to  196  quartic terms, depending on  r . 
+[ Embedding into complex components instead requires only  5  signatures, 
+setting  q = 0 ; as before  c, Y  must be real if  X  is. ] 
+
+Fred Lunnon, Maynooth 14/09/16 
+
+################################################################################
