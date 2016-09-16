@@ -98,17 +98,20 @@ into compact form convenient for computation is nontrivial.  See discussions at
     http://www.euclideanspace.com/maths/algebra/clifford/algebra/functions/inverse/manfred.htm 
     http://www.iancgbell.clara.net/maths/geoalg.htm 
 
-  In particular for general multor  X in Cl(p,q,r)  with rank  n = p+q+r <= 4 , 
-determinant (proportional to)  c  and cofactor  Y  such that  X Y = c  are 
-given simply by 
-    c  =  < X X+ >_0 ;  Y  =  (X+) (2 c - X X+) ; 
-and the inverse if it exists by  1/X = Y/c , where  X+  denotes reversion. 
-A program verifying this symbolically for each of  15  distinct signatures will 
-shortly become available elsewhere; the determinant expands to a polynomial in 
-the components of  X  with up to  196  quartic terms, depending on  r . 
-[ Embedding into complex components instead requires only  5  signatures, 
-setting  q = 0 ; as before  c, Y  must be real if  X  is. ] 
+  In particular for nonzero multor  X  in Cl(p,q,r)  with rank  n = p+q+r <= 4 , 
+the determinant (proportional to)  c  and cofactor  Y  with  X Y = Y X = c  are 
+given by 
+    c  :=  < X X+ >_0 ;  
+    Y  :=  X+  if  X X+ = c  (nearly);  
+    Y  :=  (X+) (2 c - X X+)  otherwise;  
+where  X+  denotes reversion; the inverse by  1/X = Y/c  if  c <> 0 .  
+Tedious justification proceeds in two stages: in chosen algebra of rank 4 , 
+given arbitrary  X , set  Z = X X+  and show  <Z>_2 = <Z>_3 = 0 ; then given 
+arbitrary  Z  with  <Z>_2 = <Z>_3 = 0 , set  W = Z (2 <Z>_0 - Z)  and show  W  
+scalar. [ A program verifying this symbolically for all  15  signatures is 
+included in file  GA_scripts.py ; though with a little more care, all cases 
+can in fact be deduced from  Cl(4)  alone. ] 
 
-Fred Lunnon, Maynooth 14/09/16 
+Fred Lunnon, Maynooth 15/09/16 
 
 ################################################################################
