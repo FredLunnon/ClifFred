@@ -7,14 +7,14 @@
   The Python GA package  <clifford>  implements an uncommon operation: 
 Clifford division, essentially the inverse of a general multor (when such 
 exists).  Although the program itself seems to work correctly, current 
-documentation claims that left-inverse and right-inverse are distinct; 
-and moreover introduces five different identifiers for just two separate 
+documentation states that left-inverse and right-inverse may be distinct; 
+and on these grounds introduces five different identifiers for two separate 
 functions.  
 
-  A casual trial suggests that --- on the contrary --- all produce essentially 
-identical results, and just a single function is required.  However, proving 
-that the inverse is actually unique and two-sided is not straightforward; 
-so I am taking the opportunity to discuss this topic, which is evidently 
+  However a casual trial suggests that --- on the contrary --- all produce 
+essentially identical results, and just a single function is required. 
+To prove that the inverse is unique and two-sided is not straightforward, 
+so I am seizing the opportunity to expatiate upon a topic which is evidently 
 not widely understood.  
 
   The obscurity is understandable, since division at present lacks practical 
@@ -63,7 +63,7 @@ X  there exists some  Y <> 0  such that  X Y = c , a scalar which may further
 be restricted to  {1, 0} ; if  c <> 0  then  Y  is unique, if  c = 0  then  X  
 is a divisor of zero and  Y  can be chosen arbitrarily within the null space. 
 
-  Note that there is in general no alternative to computing a determinant for 
+  Note that there is in general no alternative to the determinant for 
 establishing invertibility: nonzero magnitude does not guarantee invertibility, 
 nor does zero magnitude preclude it.  Counter-examples in  Cl(1,1)  are 
 
@@ -90,28 +90,36 @@ See
     "Structure of spin groups associated with degenerate Clifford algebras" 
     J. Math. Phys. 27, 1 (1986) 
 
-  Finally, for particular  Cl(p,q,r)  in low dimension  n = p+q+r  it is 
-feasible to take advantage of the structure of equations  X Y = c  to write 
-down explicit a symbolic solution for  Y  in terms of  X , avoiding the 
-necessity for cumbersome numerical solving: however manipulating the result 
-into compact form convenient for computation is nontrivial.  See discussions at 
+  Solving linear equations can be avoided altogether in an algebra of low rank, 
+by developing an explicit symbolic solution for  Y  in terms of  X ; although 
+manipulating the result into conveniently compact form may be nontrivial.  
+See discussions at 
     http://www.euclideanspace.com/maths/algebra/clifford/algebra/functions/inverse/manfred.htm 
     http://www.iancgbell.clara.net/maths/geoalg.htm 
 
-  In particular for nonzero multor  X  in Cl(p,q,r)  with rank  n = p+q+r <= 4 , 
-the determinant (proportional to)  c  and cofactor  Y  with  X Y = Y X = c  are 
-given by 
-    c  :=  < X X+ >_0 ;  
-    Y  :=  X+  if  X X+ = c  (nearly);  
-    Y  :=  (X+) (2 c - X X+)  otherwise;  
+  In particular for nonzero multor  X  in Cl(p,q,r)  when  p+q+r <= 4 , 
+the determinant  c  and cofactor  Y  with  X Y = Y X = c  are given by 
+    c  :=  < X X+ >_0 ,  
+    Y  :=  X+  if  X X+ = c  (approx?),  
+    Y  :=  (X+) (2 c - X X+)  otherwise,  
 where  X+  denotes reversion; the inverse by  1/X = Y/c  if  c <> 0 .  
-Tedious justification proceeds in two stages: in chosen algebra of rank 4 , 
+
+[ Tedious justification proceeds in two stages: in chosen algebra of rank 4 , 
 given arbitrary  X , set  Z = X X+  and show  <Z>_2 = <Z>_3 = 0 ; then given 
 arbitrary  Z  with  <Z>_2 = <Z>_3 = 0 , set  W = Z (2 <Z>_0 - Z)  and show  W  
-scalar. [ A program verifying this symbolically for all  15  signatures is 
-included in file  GA_scripts.py ; though with a little more care, all cases 
-can in fact be deduced from  Cl(4)  alone. ] 
+scalar. A program verifying this symbolically for  15  rank-4 signatures is 
+included at 
+    https://github.com/FredLunnon/ClifFred/blob/master/GA_scripts.py 
+With a little more care, all cases can in fact be deduced from  Cl(4)  alone. ] 
 
-Fred Lunnon, Maynooth 15/09/16 
+  Finally, how could the confusion mentioned initially earlier have arisen? 
+Assuming formally correct programming, the only circumstance under which 
+apparent left-right inequality might conceivably arise is that both are 
+actually unusably inaccurate, as a consequence of the argument  X  being 
+approximately singular.  Which could in principle be detected by inspecting 
+the size of the determinant relative to expected rounding error; though a 
+simpler fix might just inspect the difference between the two results. 
+
+Fred Lunnon, Maynooth 16/09/16 
 
 ################################################################################
