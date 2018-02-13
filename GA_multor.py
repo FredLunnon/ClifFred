@@ -406,7 +406,7 @@ class ClifFred :
   def vee (GA, X, Y, lo = None, hi = None) : 
     if lo is None : lo = 0; hi = GA.dim;  # grade options 
     elif hi is None : hi = lo; # end if 
-    return GA.dual(GA.wed(GA.dual(X), GA.dual(Y), GA.dim-hi, GA.dim-lo));  # end def 
+    return GA.dual(GA.wedge(GA.dual(X), GA.dual(Y), GA.dim-hi, GA.dim-lo));  # end def 
   
   # Inner (fat-dot) product multors: return  Z = X o Y , grades  lo  to  hi  inclusive 
   #   \sum_k,l < <X>_k <Y>_l >_|k-l|  so  l <= dim-m  &  k = l+m  or  l >= m  &  k = l-m ;  once only when  m = 0 ! 
