@@ -4,7 +4,7 @@
 #   Python/SymPy/GA_multor program source for numerical frame transformation 
 # and versor decomposition into fixed-axis (Givens') rotations, with demo & test 
 # harness, for real Clifford algebra  Cl(p,q,r) . 
-# Version 2.3; date: 28/07/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 3.2; date: 15/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 
   Assistance from Alan Cortzen and Warren D. Smith concerning the algorithms 
 for frame conversion and Givens factorisation is hereby acknowledged. 
@@ -29,14 +29,6 @@ right-hand frames, even- and odd-grade versors, etc, as discussed in the
 specifications below.  Competent application to situations such as continuous 
 motion interpolation requires awareness of these. 
 
-  Caveat: within this module, matrices and versors compose LEFT-TO-RIGHT, eg. 
-    matrix  K  acts on row vector  v  via  v <- v K ; 
-    versor  X  transforms  Z  via  Z <- (1/X) Z X ; 
-    transformation  X  followed by  Y  requires  X Y ; 
-Use in an application with opposite conventions would require the user to 
-transpose / revert inputs and outputs, and reverse the order of compositions, 
-at the interface. [ It may be feasible to automate this pesky 4-way switch! ] 
-
   Notation:  Cl(p,q,r)  denotes the mixed degenerate Clifford algebra with 
 components real, generators  e_i  where  i = 1,...,n , and  (e_i)^2 = 
     +1  for  0 < i <= p , -1  for  p < i <= p+q , 0  for  p+q< i <= p+q+r = n ; 
@@ -51,6 +43,14 @@ normalised, with magnitude  ||X|| in {+1, -1, 0}  as appropriate.
 Grade-k  subvector by  <X>_k .  Addition by  X+Y  or  X-Y  as usual: 
 note that this operation does not preserve versors, and is not preserved 
 under the homomorphism from normalised versors to orthonormal matrices. 
+
+  Caveat: within this module, matrices and versors compose LEFT-TO-RIGHT, eg. 
+    matrix  K  acts on row vector  v  via  v <- v K ; 
+    versor  X  transforms  Z  via  Z <- (1/X) Z X ; 
+    transformation  X  followed by  Y  requires  X Y ; 
+Use in an application with opposite conventions would require the user to 
+transpose / revert inputs and outputs, and reverse the order of compositions, 
+at the interface. [ It may be feasible to automate this pesky 4-way switch! ] 
 
 ################################################################################
 
@@ -93,10 +93,12 @@ Z0  recalls previous output.
 An error message results if output rounding error exceeds global bound  eps , 
 frame signatures are incompatible, or continuity cannot be established. 
 
-  Method:  At stage  k  start,  t (1/Z) F_k Z_k = G_i  for  i < k , and is orthogonal to  G_1 .. G_(k-1)  for  i >= k .  Versor  R_k  transforms  H_k  
-into  G_k  without altering  H_1 .. H_(k-1) : if angle  u  between them exceeds 
-threshold (say  pi/8 ) assign reflection  R , otherwise rotation ; 	 --- ?? 
-this avoids singularities at  u = 0, pi  for reflection, rotation resp. 
+  Method:  At stage  k  start,  t (1/Z) F_k Z_k = G_i  for  i < k , and is 
+orthogonal to  G_1 .. G_(k-1)  for  i >= k .  Versor  R_k  will transform  H_k  
+into  G_k  without altering  H_1 .. H_(k-1) , via reflection  R1  or rotation  R2 ; 
+which is chosen depends on how close their absolute magnitudes are to unity, 
+in order to maximise stability by avoiding singularities at angle 0 for reflection, 
+pi for rotation, etc. for translations and boosts. 
 
   s,t  track sign-change due to reflection at stage  k  and overall resp. 
 Pseudocode below omits implicit renormalisation, and error / continuity checks.  
@@ -124,10 +126,11 @@ Note that finally at  k = n , always  R = +/-1  approx.
 left- and the other right-handed, their corresponding orthonormal matrices 
 having different determinants; or otherwise incompatible isotropic generator 
 signs.  Regardless, on termination of the loop above, the result may be  H = -G  
-instead: when  p  is even and  r  zero, this is corrected via replacing  Z  
-with its dual. Similarly, when  p  is odd and  r  nonzero, the sign of all 
-isotropics alone may be corrected via the non-isotropic partial dual (currently 
-unimplemented).  Unreconcilable sign mismatches report a large final error.  
+instead: when  p  is even and  r  zero, this is reconciled via replacing  Z  
+with its dual. Similarly, when  p  is odd and  r  nonzero, mismatched signs 
+in all isotropics alone may be reconciled via the non-isotropic partial dual 
+(not implemented).  Unreconcilable sign mismatches cause a large error to be 
+reported.  
 
   Again, the sign of  Z  as earlier computed may flip randomly in the course of 
 a sequence of transformations intended by the user to approximate continuity. 
@@ -240,4 +243,6 @@ and matrix-versor relationship.  Source code contains examples of usage.
 
 
 ################################################################################
+
+Notation:  (1/X)  ->  (X+)  inverse ?? 
 

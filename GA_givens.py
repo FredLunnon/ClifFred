@@ -4,7 +4,7 @@
 #   Python/SymPy/GA_multor program source for numerical frame transformation 
 # and versor decomposition into fixed-axis (Givens') rotations, with demo & test 
 # harness, for real Clifford algebra  Cl(p,q,r) . 
-# Version 3.1; date: 30/07/16; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 3.2; date: 15/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 
 # In command window execute: 
 #     cd /Users/fred/fred/python; python -i GA_givens.py 
@@ -12,15 +12,14 @@
 #     cd /Users/fred/fred/python; python 
 #     from frames_givens_demo import *; 
 
-from sympy import *;  # matrices & functions; for GAlgebra 
+from sympy import *;  # matrices & functions 
 from copy import *; 
 import random; 
 import timeit; 
-#from ga import *;  # GAlgebra 
-#from mv import *;  # static GAlgebra wrappers 
 from GA_multor import *;  # ClifFred 
+#from RK_multor import *;  # ClifFred  --- TEMP ?? 
 
-FGD_version = 3.1;  # update !! 
+FGD_version = 3.2;  # update !! 
 
 # Normalise versor (magnitude assumed positive) : 
 #   version below fails to negotiate fl pt error? 
@@ -35,23 +34,26 @@ def normalise (X) :
 # Versor transforming orthonormal  Cl(p,q,r)  frame F to G ; 
 #   L-to-R composition, frame length = n ; 
 #   optional verbosity and spin continuity with previous result 
-# (fails to detect mismatched isotropic  --- FIX ?? ) 
+# Should detect and correct isotropic sign mismatches! 		 --- FIX ?? 
 def frame_transform_versor (F, G, verb = False, Z0 = 0) : 
   # local s, t, disc, k, i, n, r, Hk, H, Z, Rk, R2, err, m1, m2, n1, n2;  
   # global GA, n, eps; 
   if verb : 
-    print; print "frame_transform_versor: F, G"; print F; print; print G; print; 
-    print "k, s, ||R1||, ||R2||, R, H"; print; # end if 
+    print; 
+    print "######################"; 
+    print "frame_transform_versor"; 
+    print "######################"; 
+    print; print "F = ", F; print; print "G = ", G; print; 
+    print "      k, s, ||R1||, ||R2||, R, H      "; print; # end if 
   
   Z = GA.bld([1.0]);  t = 1;  # main loop 
   for k in range(0, GA.dim) : 
-    #Hk = GA.mul(GA.bld([t]), GA.gra(GA.mul(GA.mul(GA.rev(Z), F[k]), Z), 1)); 
     Hk = GA.mul(GA.bld([t]), GA.form(F[k], Z, 1)); 
     R1 = GA.sub(G[k], Hk); m1 = GA.mag2(R1); 
     R2 = GA.add(GA.bld([GA.mag2(G[k])]), GA.mul(Hk, G[k])); m2 = GA.mag2(R2); 
     n1 = 0 if m1 == 0 else min(abs(m1), 1.0/abs(m1)); # end if 
     n2 = 0 if m2 == 0 else min(abs(m2), 1.0/abs(m2)); # end if 
-    if max(n1, n2) < eps :  # copy (signatures clash or both isotropic) 
+    if max(n1, n2) < GA.eps :  # copy (signatures clash) 
       Rk = GA.bld([1.0]); s = 1; 
     elif n1 > n2 :  # reflect 
       Rk = normalise(R1); s = -sign(m1); 
@@ -62,18 +64,17 @@ def frame_transform_versor (F, G, verb = False, Z0 = 0) :
       print k+1, s, m1, m2; print; print Rk; print; print Hk; print; # end if end for 
   # finally  H = (1/Z) F Z ~ +/-G , Z = prod_k R ; 
   
-  # fix frame signs if possible ( p  even,  r  zero;  p  odd,  r  nonzero);  
-  #   misses mismatched isotropic generators! 			 --- FIX ?? 
-  if t < 0 : Z = GA.mul(Z, GA.J);  # end if 
+  # fix frame signs if possible ( p  even,  r  zero;  p  odd,  r  nonzero); isotropic? 
+  if t < 0 : Z = GA.mul(Z, GA.J); # end if 
   
-  if Z0 <> 0 :  # ensure  sign(Z)  continuous 				 --- ?? 
+  if Z0 <> 0 :  # ensure  sign(Z)  continuous 
     Z_Z = GA.mul(Z0, GA.rev(Z));  # (old Z)/(new Z) ~ disc  (monomial) 
     disc = round(GA.lis(Z_Z)[0]); 
     if disc == 0 and n%2 == 1 : 
       disc = GA.rev(GA.dual(GA.bld([round(GA.lis(GA.dual(Z_Z))[0])]))); 
     else : disc = GA.bld([disc]); # end if 
     if GA.mag2(disc) <> 1 : 
-      print "frame_transform_versor: discontinuity = ", disc; print; 
+      print "?? frame_transform_versor: discontinuity = ", disc; print; 
     else : Z = GA.mul(disc, Z); # end if 
   
   err = 0.0;  # roundoff error 
@@ -81,11 +82,11 @@ def frame_transform_versor (F, G, verb = False, Z0 = 0) :
   for k in range(0, GA.dim) : 
     err = err + abs(GA.mag2(GA.sub(G[k], H[k]))); # end for 
   err = sqrt(err/GA.dim); 
-  if err > eps : 
-    print "frame_transform_versor: error = ", err; print; # end if 
+  if err > GA.eps : 
+    print "?? frame_transform_versor: error = ", err; print; # end if 
     
   if verb : 
-    print "G, H, Z"; print G; print; print H; print; print Z; print; print "t, err ", t, err; print; # end if 
+    print "G, H, Z = "; print G; print; print H; print; print Z; print; print "t, err = ", t, err; print; # end if 
   return Z; # end def 
 
 # Convert vector to versor 
@@ -99,7 +100,7 @@ def vector_to_versor (V) :  # local j, W; global n, gene;
 #   L-to-R versors, L-to-R matrices; 
 #   row  i  equals vector action of versor  X  on  e_i ; 
 def versor_to_matrix (X) :  # local i, j; 
-  return Matrix([GA.form(GA.gen(i+1), X, 1)[1] for i in range(0, GA.dim)]); 
+  return Matrix([GA.lis(GA.form(GA.gen(i+1), X, 1), 1) for i in range(0, GA.dim)]); 
   # end def 
 
 # Convert matrix to versor: rotation angles halved; calls frame_transform_versor() ! 
@@ -112,7 +113,7 @@ def matrix_to_versor (A, Z0 = 0) :  # local i; global n, gene;
 # Build Givens' rotation, boost, translation in  ij-plane 
 def givens(i0, j0, t, s) :  # local i, j, R, r0; global n; 
   r0 = sqrt(abs(GA.gensig[j0]*s**2 + GA.gensig[i0]*t**2));  
-  if r0 < eps+eps : r0 = 1;  # both isotropic? 
+  if r0 < 2*GA.eps : r0 = 1;  # both isotropic? 
   R = [ [ 1-abs(sign(i-j)) 
     for j in range(0, GA.dim) ] for i in range(0, GA.dim) ];  # unit matrix 
   R[i0][i0] = t/r0; R[j0][j0] = t/r0;  # cos(angle)  etc. 
@@ -124,7 +125,12 @@ def givens(i0, j0, t, s) :  # local i, j, R, r0; global n;
 def givens_factor_matrix (B, verb = False) : 
   #local A, C, R, i, j, k, r, s, t, n, m, err; global eps; 
   n = GA.dim; m = n*(n-1)/2; 
-  if verb : print; print "givens_factor_matrix: B"; print B; print; # end if 
+  if verb : 
+    print; 
+    print "####################"; 
+    print "givens_factor_matrix"; 
+    print "####################"; 
+    print; print; print "B = ", B; print; # end if 
   
   C = Matrix([ [ 1-abs(sign(i-j)) 
     for j in range(0, n) ] for i in range(0, n) ]);  # unit matrix 
@@ -151,9 +157,9 @@ def givens_factor_matrix (B, verb = False) :
     for j in range(0, n) : 
       err = err + (B[i, j] - C[i, j])**2; # end for end for 
   err = sqrt(err/n); 
-  if err > eps : print "givens_factor_matrix: error = ", err; print; # end if 
+  if err > GA.eps : print "?? givens_factor_matrix: error = ", err; print; # end if 
   
-  if verb : print "B, R[1] ... R[m]"; print B; print; print C; print; print "err", err; print; # end if 
+  if verb : print "B, R[1] ... R[m] = "; print B; print; print C; print; print "err = ", err; print; # end if 
   return R; # end def 
 
 # Factorise  Cl(p,q,r)  versor into Givens' rotations: L-to-R composition; 
@@ -161,24 +167,30 @@ def givens_factor_matrix (B, verb = False) :
 def givens_factor_versor (Y, verb = False) : 
   # local k, B, Z, M, Rmul, Rmat, n, m, sig, err; global GA; 
   n = GA.dim; m = n*(n-1)/2; 
-  if verb : print; print "givens_factor_versor: Y"; print Y; print; # end if 
+  if verb : 
+    print; 
+    print "####################"; 
+    print "givens_factor_versor"; 
+    print "####################"; 
+    print; print; print "Y = ", Y; print; # end if 
+  
   if GA.lis(Y)[0] <> 0 : M = GA.bld([1]);  # even grade 
   else : M = GA.gen(1);  # odd grade:  e_1  non-isotropic? 
   B = versor_to_matrix(GA.mul(Y, M)); 
   Rmat = givens_factor_matrix(B); 
   Rmul = [ matrix_to_versor(Rmat[k]) for k in range(0, m) ];  # un-pruned 
   Rmul = [ GA.add(GA.gra(Rmul[k], 0), GA.gra(Rmul[k], 2)) for k in range(0, m) ]; 
-
+  
   Z = GA.rev(GA.mul(Y, M));  # 1/(Y M) R_1 ... R_m  ~  1 ,  M in {1, e_1} 
   for k in range(0, m) : 
     Z = GA.mul(Z, Rmul[k]); # end for 
   sig = GA.lis(Z)[0]; Rmul[m-1] = GA.mul(GA.bld([sig]), Rmul[m-1]);  # adjust spin 
   err = sqrt(abs(GA.mag2(GA.sub(Z, GA.bld([sig])))/2)); 
-  if err > eps : print "givens_factor_versor: error = ", err; print; # end if 
+  if err > GA.eps : print "?? givens_factor_versor: error = ", err; print; # end if 
   
   if verb : 
-    print "R_1, ..., R_m"; print Rmul; print; 
-    print "(1/Y) R_1 ... R_m, M"; print Z; print M; print; print "sig, err ", sig, err; print; # end if 
+    print "R_1, ..., R_m = "; print Rmul; print; 
+    print "(1/Y) R_1 ... R_m, M = "; print Z; print M; print; print "sig, err = ", sig, err; print; # end if 
   return Rmul; # end def 
 
 ################################################################################
@@ -196,7 +208,7 @@ def rand_vector () :  # local j, ranlis;
 def rand_versor (l) :  # local i; 
   if l%2 == 0 : X = GA.bld([1]);  
   else : X = vector_to_versor(rand_vector()); # end if 
-  for i in range(0, floor(l/2)) : 
+  for i in range(0, l//2) : 
     X = GA.mul(X, GA.add(GA.bld([1]), GA.mul(vector_to_versor(rand_vector()), 
       vector_to_versor(rand_vector())))); # end for 
   return normalise(X); # end def 
@@ -206,75 +218,54 @@ def rand_versor (l) :  # local i;
 def rand_ortho (l) : 
   return versor_to_matrix(rand_versor(l)); # end def 
 
-# Instantiate Clifford algebra, given signature list comprising  +1,-1,0's 
-#   GAlgebra wrapper 						 --- UNUSED ?? 
-def instantiate_GA (sigs0) :  # local j; 
-  global GA, GA_J, gene, sigs, eps, n, m; 
-  global e1, e2, e3, e4, e5, e6;  # export default identifiers 
-  sigs = sigs0; 
-  n = len(sigs0); m = n*(n-1)/2; 
-  
-  if n == 2 : 
-    GA = Ga('e1 e2', g = sigs); 
-    (e1, e2) = GA.mv(); gene = [e1, e2]; 
-  elif n == 3 : 
-    GA = Ga('e1 e2 e3', g = sigs); 
-    (e1, e2, e3) = GA.mv(); gene = [e1, e2, e3]; 
-  elif n == 4 : 
-    GA = Ga('e1 e2 e3 e4', g = sigs); 
-    (e1, e2, e3, e4) = GA.mv(); gene = [e1, e2, e3, e4]; 
-  elif n == 5 : 
-    GA = Ga('e1 e2 e3 e4 e5', g = sigs); 
-    (e1, e2, e3, e4, e5) = GA.mv(); gene = [e1, e2, e3, e4, e5]; 
-  elif n == 6 : 
-    GA = Ga('e1 e2 e3 e4 e5 e6', g = sigs); 
-    (e1, e2, e3, e4, e5, e6) = GA.mv(); gene = [e1, e2, e3, e4, e5, e6]; 
-  else : 
-    print; print "You're on your own, sunshine!  n = ", n; print; # end if 
-  
-  GA_J = 1;  # quasi-pseudar 
-  for j in range(0, n) : 
-    if sigs[j] <> 0 : GA_J = GA_J*gene[j]; # end if end for 
-  return None; # end def 
-
 # Verbose test suite 
 def test_main (verb = True) : 
-  global eps;  # local Amat, A, Bmat, B, Z, R, Y, n, m; 
-  print; print "test_main(): verbosity ", verb; print; 
+  # local Amat, A, Bmat, B, Z, R, Y, n, m, secs; 
+  print; 
+  print "*******************************************"; 
+  print "test_main(): signature", GA.gensig; 
+  print "*******************************************"; 
+  print; 
+  secs = timeit.default_timer(); 
   n = GA.dim; m = n*(n-1)/2; 
-  eps = 1.0**(n-16);  # rounding error bound (double-length floating-point) 
 
   # Source and target frames  A,B  via random orthonormal matrices 
-  Amat = rand_ortho(floor(n/2)*2);  # right-handed to right-handed 
+  Amat = rand_ortho((n//2)*2);  # right-handed to right-handed 
   A = [ vector_to_versor(Amat.row(i)) for i in range(0, GA.dim) ]; 
-  Bmat = rand_ortho(floor(n/2)*2); 
+  Bmat = rand_ortho((n//2)*2); 
   B = [ vector_to_versor(Bmat.row(i)) for i in range(0, GA.dim) ]; 
   Z = frame_transform_versor(A, B, verb); 
-  Amat = rand_ortho(floor(n/2)*2);  # right-handed to left-handed 
+  Amat = rand_ortho((n//2)*2);  # right-handed to left-handed 
   A = [ vector_to_versor(Amat.row(i)) for i in range(0, GA.dim) ]; 
-  Bmat = rand_ortho(floor(n/2)*2+1); 
+  Bmat = rand_ortho((n//2)*2+1); 
   B = [ vector_to_versor(Bmat.row(i)) for i in range(0, GA.dim) ]; 
   Z = frame_transform_versor(A, B, verb); 
   
   # Target  B  random orthonormal matrix 
-  B = rand_ortho(floor(n/2)*2);  # direct 
+  B = rand_ortho((n//2)*2);  # direct 
   R = givens_factor_matrix(B, verb); 
-  B = rand_ortho(floor(n/2)*2+1);  # reflective: fails! 
+  B = rand_ortho((n//2)*2+1);  # reflective: fails! 
   R = givens_factor_matrix(B, verb); 
   
   # Target  Y  random (normalised?) versor 
-  Y = rand_versor(floor(n/2)*2);  # direct 
+  Y = rand_versor((n//2)*2);  # direct 
   R = givens_factor_versor(Y, verb); 
-  Y = rand_versor(floor(n/2)*2+1);  # reflective: fails for odd  n ! 
+  Y = rand_versor((n//2)*2+1);  # reflective: fails for odd  n ! 
   R = givens_factor_versor(Y, verb); 
   
+  secs = timeit.default_timer() - secs; 
+  print "Partial non-initial elapsed time in secs ", secs; 
   return "DONE"; # end def 
 
 # Demo with  n = 2  set globally: versor spin; 
 #   versor -> matrix homomorphism; spin continuity 
 def spin_disc (l = 20) : 
   # local k, pile, R, R_k, X, A, R_1, R_11, R_2, R_22; global gene; 
-  print; print "spin_disc(): demos, l = ", l; print; 
+  print; 
+  print "****************************"; 
+  print "spin_disc(): demos, l = ", l; 
+  print "****************************"; 
+  print; 
   
   # ambiguous sign of versor, due to double cover of continuous rotation: 
   #   after  l  steps,  X_l ~ X_0  but  R_l ~ -R_0 ~ -1 ; 
@@ -298,40 +289,54 @@ def spin_disc (l = 20) :
   
   return "DONE"; # end def 
 
-verbose = True; demons = True;  # print & execute switches, True / False
+verbose = False; demons = True;  # print & execute switches, True / False
 secs = timeit.default_timer(); 
+random.seed(3.1415926536); # repeatable pseudorandom generation  --- TEMP ?? 
 if demons : 
   print; print "Python/ClifFred frames_givens_demo version", FGD_version; 
-  GA = ClifFred([1,1,1,1]);  # 3-sphere geometry  Cl(4) 
+  GA = multor([1,1,1,1]);  # 3-sphere geometry  Cl(4) 
   print test_main(verbose);  # verbose tests 
-  GA = ClifFred([1,1]);  # circle geometry  Cl(2) 
+  GA = multor([1,1,1,1,-1,-1]);  # Lie-sphere Cl(4,2) 
+  print test_main(verbose);  # verbose tests 
+  GA = multor([1,1,1,1,-1,-1,-1,-1]);  # universal Cl(4,4) 
+  print test_main(verbose);  # verbose tests 
+  GA = multor([1,1,-1,-1,0,0]);  # mixed degenerate  Cl(2,2,2) 
+  print test_main(verbose);  # verbose tests 
+  GA = multor([1,1]);  # circle geometry  Cl(2) 
   print spin_disc(20); # spin demo 
-  GA = ClifFred([1,1,-1,-1,0,0]);  # mixed degenerate  Cl(2,2,2) 
-  print test_main(verbose);  # verbose tests 
 # end if 
+
 secs = timeit.default_timer() - secs; 
-print "Elapsed time in secs ", secs; 
+print "Total elapsed time in secs ", secs; 
 
 ################################################################################
 
 # TODO --- 
 # Wrap non-static properties: matrix.T , .row, list.append; unit matrix, etc ?? 
+#   Maybe try  NumPy  matrices, multi-prec? 
 # spin_disc() : demo dual continuity ?? 
 # test_main () : tidy identifiers ?? 
 # rand_versor() : fix sign quibble? 
-# frame_transform_versor() : 
-#   misses mismatched isotropic generators! Maybe related to  --- INVESTIGATE ?? 
-# givens_factor_versor() : 
-#   Cl(2,2,2)  often reports large errors, tho matrix OK ! 	 --- BUG ?? 
+# Preset 1 & unit vectors ? 
+# Use mullis(), addlis() ; zero() , prop() ?? 
+# Test with RK_multor (clifford : nondegenerate); printing lists ugly! 
+# Random gen. differs between RK & WFL, eg. for spin_disc() : X  --- WHY ?? 
+
+# Document: switches, wrappers !!  Link switches to command line? 
+# frame_transform_versor() : detect and correct isotropic sign mismatches? 
 # givens_factor_matrix() : 
 #   Now reports large error for reflective case (formerly suppressed)! 
-#   Query: test translation in 1-space CGA = GA(2, 1) ? 
-#   Query: givens_factor_versor() succeeds though givens_factor_matrix() fails! 
-# Wrappers & times for GA_multor; GAlgebra, Clifford ... ?? 
+#   Query: test parabolic, eg. translation in 1-space CGA = GA(2, 1) ? 
+# givens_factor_versor() : occasional failures --- 
+#   Cl(2,2,2) many R_k have scalar part unity; 
+#   Cl(4,4) zero result; 
+
+# Wrappers & times for GA_multor; GAlgebra, clifford ... ?? 
 #   Time 18.75 sec -> 6.47 : compare GAlgebra ~141.0 / 21.8 ; printing ~0.1 sec?  
-# Preset 1 & unit vectors ? 
-# Document: switches, wrappers !! 
-# Link switches to command line? 
-# Use  NumPy  matrices, multi-prec? 
-# Use mullis(), addlis() ; zero() , prop() ?? 
+# Timings secs elapsed 
+#  WFL    RK   n 
+# 0.81  0.18   4 ex init 
+# 6.28  1.94   6 ex init 
+# 53.0   428   8 ex init 
+# 60.5   580   total (720MB) 
 
