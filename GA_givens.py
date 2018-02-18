@@ -1,10 +1,10 @@
 
 ################################################################################
 
-#   Python/SymPy/GA_multor program source for numerical frame transformation 
+# Python/SymPy/GA_multor program source for numerical frame transformation 
 # and versor decomposition into fixed-axis (Givens') rotations, with demo & test 
 # harness, for real Clifford algebra  Cl(p,q,r) . 
-# Version 3.2; date: 15/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 3.3; date: 18/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 
 # In command window execute: 
 #     cd /Users/fred/fred/python; python -i GA_givens.py 
@@ -19,17 +19,38 @@ import timeit;
 from GA_multor import *;  # ClifFred 
 #from RK_multor import *;  # ClifFred  --- TEMP ?? 
 
-FGD_version = 3.2;  # update !! 
+FGD_version = 3.3;  # update !! 
 
-# Normalise versor (magnitude assumed positive) : 
-#   version below fails to negotiate fl pt error? 
-# def normalise (X) : return X/X.norm() # end def 
-#   (symmetric) workaround below suffices for approximate versors! 
-#def mag2 (X) : return sympify(grade((rev(GA.mv(X))*X), 0)) # end def  # coerce! 
+################################################################################
 
+# Toolkit : random multor generation (extract from GA_scripts.py) 
+
+# Rescale multor to magnitude +/-1 (assumed nonzero) 
 def normalise (X) : 
   return GA.mul(X, GA.bld([1.0/sqrt(abs(GA.mag2(X)))])) # end def 
 
+# Random real: component range (-m..+m) ; precision ~ 10E-16 
+def rand_unit (m = 1) : 
+  return random.uniform(-1, +1); # end def 
+
+# Random vector or grator: grade  k , component range  m  
+def rand_grator (k = 1, m = 1) :  # local j; 
+  return GA.bld([ rand_unit() for j in range(0, GA.bin[k]) ], k); # end def 
+
+# Random multor: component range  m  
+def rand_multor (m = 1) :  # local i; 
+  return GA.addlis([ rand_grator(i) for i in range(0, GA.dim+1) ]); # end def 
+
+# Random versor: orthonormal product of  l  vectors, avoiding isotropic 
+def rand_versor (l = 2) :  # local i; 
+  if l%2 == 0 : X = GA.bld([1]);  
+  else : X = rand_grator(); # end if 
+  for i in range(0, l//2) : 
+    X = GA.mul(X, GA.add(GA.bld([1]), GA.mul(rand_grator(), rand_grator()))); 
+    # end for 
+  return normalise(X); # end def 
+
+################################################################################
 
 # Versor transforming orthonormal  Cl(p,q,r)  frame F to G ; 
 #   L-to-R composition, frame length = n ; 
@@ -124,7 +145,7 @@ def givens(i0, j0, t, s) :  # local i, j, R, r0; global n;
 #   with optional verbosity; L-to-R matrices 
 def givens_factor_matrix (B, verb = False) : 
   #local A, C, R, i, j, k, r, s, t, n, m, err; global eps; 
-  n = GA.dim; m = n*(n-1)/2; 
+  n = GA.dim; m = GA.bin[2]; 
   if verb : 
     print; 
     print "####################"; 
@@ -166,7 +187,7 @@ def givens_factor_matrix (B, verb = False) :
 #   calls givens_factor_matrix();  Y = R_1 ... R_m (e_1 if odd) 
 def givens_factor_versor (Y, verb = False) : 
   # local k, B, Z, M, Rmul, Rmat, n, m, sig, err; global GA; 
-  n = GA.dim; m = n*(n-1)/2; 
+  n = GA.dim; m = GA.bin[2]; 
   if verb : 
     print; 
     print "####################"; 
@@ -195,24 +216,6 @@ def givens_factor_versor (Y, verb = False) :
 
 ################################################################################
 
-# Random real: component range (-1..+1) ; precision ~ 10E-16 
-def rand_unit () : 
-  return random.uniform(-1, +1); # end def 
-
-# Random row vector (non-isotropic) 
-def rand_vector () :  # local j, ranlis; 
-  ranlis = [ rand_unit() for j in range(0, GA.dim) ]; 
-  return Matrix([ [ ranlis[j] for j in range(0, GA.dim) ] ]); # end def 
-
-# Random orthonormal  Cl(p,q,r)  product of  l  vectors, avoiding isotropic 
-def rand_versor (l) :  # local i; 
-  if l%2 == 0 : X = GA.bld([1]);  
-  else : X = vector_to_versor(rand_vector()); # end if 
-  for i in range(0, l//2) : 
-    X = GA.mul(X, GA.add(GA.bld([1]), GA.mul(vector_to_versor(rand_vector()), 
-      vector_to_versor(rand_vector())))); # end for 
-  return normalise(X); # end def 
-
 # Random orthonormal  O(p,q,r)  matrix product of  l  reflections 
 #   Q & D : for  n  odd  &  l  odd, version below yields  det = +1 ? 
 def rand_ortho (l) : 
@@ -227,7 +230,7 @@ def test_main (verb = True) :
   print "*******************************************"; 
   print; 
   secs = timeit.default_timer(); 
-  n = GA.dim; m = n*(n-1)/2; 
+  n = GA.dim; 
 
   # Source and target frames  A,B  via random orthonormal matrices 
   Amat = rand_ortho((n//2)*2);  # right-handed to right-handed 
@@ -289,9 +292,11 @@ def spin_disc (l = 20) :
   
   return "DONE"; # end def 
 
+# Main program driver:  test_main()  should cause  givens_factor_matrix()  
+#   to report a large error once for each signature! 
 verbose = False; demons = True;  # print & execute switches, True / False
 secs = timeit.default_timer(); 
-random.seed(3.1415926536); # repeatable pseudorandom generation  --- TEMP ?? 
+#random.seed(3.1415926536); # repeatable pseudorandom generation  --- TEMP ?? 
 if demons : 
   print; print "Python/ClifFred frames_givens_demo version", FGD_version; 
   GA = multor([1,1,1,1]);  # 3-sphere geometry  Cl(4) 
@@ -307,7 +312,8 @@ if demons :
 # end if 
 
 secs = timeit.default_timer() - secs; 
-print "Total elapsed time in secs ", secs; 
+print "Total elapsed time in secs ", secs;  # ~60 sec 
+#quit(); 
 
 ################################################################################
 

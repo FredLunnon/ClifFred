@@ -4,7 +4,7 @@
 #   Python/SymPy/GA_multor program source for numerical frame transformation 
 # and versor decomposition into fixed-axis (Givens') rotations, with demo & test 
 # harness, for real Clifford algebra  Cl(p,q,r) . 
-# Version 3.2; date: 15/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 3.3; date: 18/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 
   Assistance from Alan Cortzen and Warren D. Smith concerning the algorithms 
 for frame conversion and Givens factorisation is hereby acknowledged. 
@@ -64,6 +64,10 @@ Below the fold the source comprises a substantial testbed harness:
     test_main() 
 contain examples of usage of the principal functions. 
 
+  Caveat:  test_main()  should cause  givens_factor_matrix()  to report a 
+large error once for each signature! 
+
+
 
   Variable:  eps = 1.0E-12 
 
@@ -79,8 +83,8 @@ Norms and components smaller than this quantity are interpreted as zero;
 
   Method:  The former is trivial: matrix entry  A_ij  is simply the component 
 of  e_i  in the action of  X  on  e_j .  The latter in contrast employs 
-frame_transform_versor()  to transform the unit frame into one whose vectors are 
-the rows of  A ; therefore the same continuity and sign issues are involved. 
+frame_transform_versor()  to transform the unit frame into one whose vectors 
+are rows of  A ; therefore the same continuity and sign issues are involved. 
 
 
   Function: frame_transform_versor (F, G, verb = False, Z0 = 0) 
@@ -243,6 +247,4 @@ and matrix-versor relationship.  Source code contains examples of usage.
 
 
 ################################################################################
-
-Notation:  (1/X)  ->  (X+)  inverse ?? 
 
