@@ -2,7 +2,7 @@
 ################################################################################
 
 #   "ClifFred" Python source for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 13/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 18/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_multor.py 
 
@@ -154,7 +154,8 @@ class ClifFred :
   
   # Extract  k-grator  <X>_k  of multor  X  qua list, expanding empty 
   def lis (GA, X, k = 0) :  # local h; # global dim,bin; 
-    return [] if 0 > k or k > GA.dim else copy(X[k]) if X[k] <> 0 else [ 0 for h in range(0, GA.bin[m]) ]; # end def 
+    return [] if 0 > k or k > GA.dim else copy(X[k]) if len(X[k]) <> 0 \
+    else [ 0 for h in range(0, GA.bin[k]) ]; # end def 
   
   # Grade  <X>_k  of multor  X  
   def gra (GA, X, k = 0) : 
