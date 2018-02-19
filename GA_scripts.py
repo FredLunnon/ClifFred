@@ -2,14 +2,16 @@
 ################################################################################
 
 #   "ClifFred" demonstrations for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 17/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 18/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_scripts.py 
-# Todos: optional random fl. pt. inputs? iterative  1/X  demo? 
+
+# TODOS: optional random fl. pt. inputs? iterative  1/X  demo? 
 # Contents list ?? Set timers after initialising? 
 # Warm up PRNG using timer? 
+# Demo octonions and triality --- to GA_scripts.py ? see  scratch.py 
 
-GAS_version = 1.1;  # update !! 
+GAS_version = 1.2;  # update !! 
 from GA_multor import *;  # ClifFred 
 # from RK_multor import *;  # clifford  --- TEMP ?? 
 
@@ -26,6 +28,7 @@ import random;
 def simpex (X) : 
   return [ [ expand(Xki) for Xki in Xk ] for Xk in X ]; # end def  
 
+# Rescale multor to magnitude +/-1 (assumed nonzero) 
 def normalise (X) : 
   return GA.mul(X, GA.bld([1.0/sqrt(abs(GA.mag2(X)))])) # end def 
 
