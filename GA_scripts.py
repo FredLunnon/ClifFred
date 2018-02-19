@@ -2,7 +2,7 @@
 ################################################################################
 
 #   "ClifFred" demonstrations for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 18/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 19/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_scripts.py 
 
@@ -198,6 +198,70 @@ if demons :
   
   secs = timeit.default_timer() - secs; 
   print "Elapsed time in secs ", secs;  # 0.53 sec 
+# end if 
+
+################################################################################
+
+# Octonions and Moufang identities: 
+#   triality remains unimplemented since Lounesto sect. 9 apparently incorrect! 
+
+# Pertti Lounesto "Octonions and Triality" 
+# Advances in Applied Clifford Algebras vol. 11 no.2, 191--213 (2001) , 
+# sect. 3 : octonion product for paravectors in  Cl(0,7)  via 
+#   A o B  ==  < A B(1 + W)(1 - e_1234567) >_0..1 ; 
+#   A o B  ==  < A B(1 - V) >_{0,1} ; 
+# for multors in  Cl(0,8)  via 
+#   A o B  ==  < A e_8 B(1 + W)(1 - J) >_1  for multors  A,B , identity == e_8 ; 
+
+# Convert  Cl(0,7)  paravector  X  to/from  Cl(8)^0  multor  Y  in  Cl(0,8) : 
+#   assumes  X  omits  e_8 ,  Y  is even; 
+def con7to8(X) :  # local me8; 
+  me8 = GA.sub(GA.bld(), GA.gen(8));  # - e_8 
+  return GA.sub(GA.even(X), GA.mul(GA.odd(X), me8));  # end def 
+
+def con8to7(Y) :  # local me8, Xe, Xo; 
+  me8 = GA.sub(GA.bld(), GA.gen(8));  # - e_8 
+  Xe = GA.mul(GA.wedge(Y, me8), me8);  # - even(Y) 
+  Xo = GA.mul(GA.add(Y, Xe), me8);  # odd(Y) 
+  return GA.sub(Xo, Xe);  # end def 
+
+# Octonion product of paravectors in  Cl(0,n)  for  n >= 7 : 
+#   < X Y (1 - V) >_{0,1} , with  V = e_124 + ... + e_713 ; 
+#   note non-associative & non-commutative 
+def omp7(X, Y) :  # local V, Z, fano, vert, line; 
+  fano = [ [1,2,4], [2,3,5], [3,4,6], [4,5,7], [5,6,1], [6,7,2], [7,1,3] ]; 
+  V = GA.addlis([ GA.mullis( [GA.gen(vert) for vert in line]) for line in fano ]); 
+  Z = GA.mul(GA.mul(X, Y), GA.sub(GA.bld([1]), V)); 
+  return GA.add(GA.gra(Z, 0), GA.gra(Z, 1));  # end def 
+
+# Octonion product of multors in  Cl(0,n)  for  n >= 8 : safe version 
+def omp8(X, Y) : 
+  return con7to8(omp7(con8to7(X), con8to7(Y)));  # end def 
+
+
+# Prove Moufang identities for symbolic octonions in  Cl(0,7) 
+#   ((X Y)X)Z = X(Y(X Z);  Z((X Y)X) = ((Z X)Y)X;  (X(Y Z))X = (X Y)(Z X);  
+verbose = True; demons = True;  # print & execute switches, True / False
+if demons : 
+  secs = timeit.default_timer(); 
+  print; print "Python/ClifFred/GA_scripts: octonions, Moufang, triality :  ", GAS_version; print; 
+  
+  var("x0, x1, x2, x3, x4, x5, x6, x7, x8, y0, y1, y2, y3, y4, y5, y6, y7, y8, z0, z1, z2, z3, z4, z5, z6, z7, z8"); 
+  n = 7; sigs = [-1 for j in range(0, n)];  #  Cl(0,7) 
+  GA = ClifFred(sigs); print "signature ", sigs; print; 
+  
+  X = GA.add(GA.bld([x0], 0), GA.bld([x1, x2, x3, x4, x5, x6, x7], 1)); 
+  Y = GA.add(GA.bld([y0], 0), GA.bld([y1, y2, y3, y4, y5, y6, y7], 1)); 
+  Z = GA.add(GA.bld([z0], 0), GA.bld([z1, z2, z3, z4, z5, z6, z7], 1)); 
+  simpex(GA.sub( omp7(omp7(X, omp7(Y, Z)), X), omp7(omp7(X, Y), omp7(Z, X)) ));  
+  # (X(Y Z))X = (X Y)(Z X) 
+  simpex(GA.sub( omp7(omp7(omp7(X, Y), X), Z), omp7(X, omp7(Y, omp7(X, Z))) )); 
+   # ((X Y)X)Z = X(Y(X Z) 
+  simpex(GA.sub( omp7(Z, omp7(omp7(X, Y), X)), omp7(omp7(omp7(Z, X), Y), X) )); 
+   # Z((X Y)X) = ((Z X)Y)X 
+  
+  secs = timeit.default_timer() - secs; 
+  print "Elapsed time in secs ", secs;  # 16.5 sec 
 # end if 
 
 ################################################################################
