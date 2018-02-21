@@ -12,7 +12,7 @@ This release should be regarded as beta-stable.
   Module  <GA_scripts.py>  contains several examples of complete though 
 sparsely documented applications using the engine.  The first section includes 
 a short toolkit for generating random test data, followed by increasingly 
-elaborate sections demonstrating various GA identities.  
+elaborate sections demonstrating GA identities, including triality in  Spin(8) . 
 The final two sections comprise nontrivial geometric applications: measurement 
 of a tetrahedron in Euclidean 3-space, and the Apollonian problem in contact 
 (Poincaré) 2-space. 
