@@ -2,7 +2,7 @@
 ################################################################################
 
 #   "ClifFred" Python source for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 18/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 20/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_multor.py 
 
@@ -675,8 +675,8 @@ print " elapsed time in secs ", secs;  # 0.13 sec
 
 # TODO --- 
 # (versor) divide, pre-divide; rescale by 1/integer; normalise() with sqrt; 
-#   Attach  GA.s0, GA.s1, GA.e[k]  --- ?? 
-# GA.neg() subtract from GA.s0 = [ [ ] for k in range(0, GA.dim+1) ]; 
+#   Attach  GA.O = [ [ ] for k in range(0, GA.dim+1) ]; GA.I 
+#   GA.neg() subtract from GA.O , GA.inv() , GA.div() , GA.vid() ;  --- ?? 
 # Maybe sum, product, wedge, ... accept arbitrarily many args?  
 #   init() etc :  h -> k -> l -> m -> n  ... 
 #   class ClifFred (object) : https://docs.python.org/2/tutorial/classes.html sect. 9.5 inheritance. 
