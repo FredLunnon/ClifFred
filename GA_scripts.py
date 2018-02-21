@@ -202,16 +202,17 @@ if demons :
 
 ################################################################################
 
-# Octonions and Moufang identities: 
-#   triality remains unimplemented since Lounesto sect. 9 apparently incorrect! 
-
+# Octonions and triality in  Spin(8) : see 
 # Pertti Lounesto "Octonions and Triality" 
-# Advances in Applied Clifford Algebras vol. 11 no.2, 191--213 (2001) , 
-# sect. 3 : octonion product for paravectors in  Cl(0,7)  via 
-#   A o B  ==  < A B(1 + W)(1 - e_1234567) >_0..1 ; 
-#   A o B  ==  < A B(1 - V) >_{0,1} ; 
-# for multors in  Cl(0,8)  via 
-#   A o B  ==  < A e_8 B(1 + W)(1 - J) >_1  for multors  A,B , identity == e_8 ; 
+# Advances in Applied Clifford Algebras vol. 11 no.2, 191--213 (2001) 
+# http://deferentialgeometry.org/papers/loun112.pdf 
+
+# Octonion product for multors in  Cl(0,8) , Lounesto sect. 3 :  
+#   A o B  ==  < A e_8 B(1 + W)(1 - J) >_1  for vectors  A,B , identity == e_8  
+# for paravectors in  Cl(0,7)  via 
+#   A o B  ==  < A B(1 + W)(1 - e_1234567) >_{0,1} ; 
+#   A o B  ==  < A B(1 - V) >_{0,1}  (tested!)  
+# Implement & compare alternative versions of omp7(), omp8() ? 
 
 # Convert  Cl(0,7)  paravector  X  to/from  Cl(8)^0  multor  Y  in  Cl(0,8) : 
 #   assumes  X  omits  e_8 ,  Y  is even; 
@@ -263,6 +264,139 @@ if demons :
   secs = timeit.default_timer() - secs; 
   print "Elapsed time in secs ", secs;  # 16.5 sec 
 # end if 
+
+
+# Triality  T(X)  on  Cl(0,7)  paravector in  Cl(0,8) , Lounesto sect. 9 : 
+#   T(X)  ==  T1(X) T2(X) 
+#   2 T1(X)  ==  (1 - J) < X(1 + W)(1 + J) >_{0,6} + (1 + J) ; 
+#   T2(X)  ==  (W - 3) even(X(1 - J)) (W - 3)^(-1) ;
+#   J  ==  e_1234567 ;  
+#   V  ==  e_124 + e_235 + e_346 + e_457 + e_561 + e_672 + e_713 ; 
+#   W  ==  V (1/J)  =  V J ; 
+
+def trial07(X) :  
+  # local T, T1, T2, T3, T4, T5, W3, V, W, J, I, v, l, fano, e8; 
+  I = GA.bld([1]); J = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
+  fano = [ [v%7, (v+1)%7, (v+3)%7] for v in range(0, 7) ]; 
+  V = GA.addlis([ GA.mullis([GA.gen(v+1) for v in l]) for l in fano ]); 
+  W = GA.mul(V, J, 4, 4); 
+  T5 = GA.mul(GA.mul(X, GA.add(I, W)), GA.add(I, J)); 
+  T3 = GA.add(GA.gra(T5, 0), GA.gra(T5, 6)); 
+  T4 = GA.even(GA.mul(X, GA.sub(I, J))); 
+  W3 = GA.add(W, GA.bld([-3])); 
+  T1 = GA.mul(GA.add(GA.mul(GA.sub(I, J), T3), GA.add(I, J)), GA.bld([1.0/2]));  
+  T2 = GA.mullis([ W3, T4, GA.rev(W3), GA.bld([1.0/GA.mag2(W3)])]); 
+  return GA.mul(T1, T2);  # end def 
+
+# Triality on even versor in  Cl(0,8) 
+def trial08(Y) : 
+  return con7to8(trial07(con8to7(Y)));  # end def 
+
+
+# Triality via versors in  Cl(0,8)  demo: 
+verbose = True; demons = True;  # print & execute switches, True / False
+if demons : 
+  secs = timeit.default_timer(); 
+  print; print "Python/ClifFred/GA_scripts: Demo octonions and triality, n = 8 :  ", GAS_version; print; 
+  
+  n = 8; sigs = [-1 for j in range(0, n)];  #  Cl(0,8) 
+  GA = ClifFred(sigs); print "signature ", sigs; print; 
+  
+  # Check  T(X)  cycles thru  X = +1, +1;  -1, J, -J, -1; 
+  X = GA.bld([+1]); X0 = trial08(X); 
+  print X; print X0; print;  # X0 = X ? 
+  X = GA.bld([-1]); Y = trial08(X); Z = trial08(Y); X0 = trial08(Z); 
+  print X; print Y; print Z; print X0; print;  # X0 = X ? 
+  
+  # Check  T(Y)  conserves random vector for random versor  Y 
+  Y = rand_versor(n); U = rand_versor(1); 
+  Z = trial08(Y); V = GA.form(U, Z);  # approx. vector? 
+  V1 = GA.gra(V, 1);  print GA.zero(GA.sub(V, V1)); print V1; 
+  
+  secs = timeit.default_timer() - secs; 
+  print "Elapsed time in secs ", secs;  # 3.3 secs 
+# end if 
+
+
+# Triality  T(X)  on  Cl(8)^0  versor in  Cl(8) , Lounesto sect. 9 : 
+#   T(X)  ==  T1(X) T2(X) ; 
+#   2 T1(X)  ==  (1 + J) ( < X(1 + W)(1 - J) >_{0,6} ^ e_8 ) (1/e8) + (1 - J) ; 
+#   T2(X)  ==  (W - 3) ( (X(1 + J)) ^ e_8 ) (1/e8) (W - 3)^(-1) ;
+#   J  ==  e_12345678 ;  
+#   V  ==  e_124 + e_235 + e_346 + e_457 + e_561 + e_672 + e_713 ; 
+#   W  ==  V (1/e_1234567)  =  e_8 J V ; 
+#   note  (1/e8) = e_8  but  (... ^ e_8) (1/e8)  doesn't cancel!
+
+def trial8(X) : 
+  # local T, T1, T2, T3, T4, T5, W3, V, W, J, I, e8, k, l, fano; 
+  I = GA.bld([1]); e8 = GA.gen(8); J = GA.J; 
+  fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
+  V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
+  W = GA.mul(V, GA.mul(e8, J), 4, 4); 
+  T5 = GA.mullis([X, GA.add(I, W), GA.sub(I, J)]); 
+  T3 = GA.mul(GA.wedge(GA.add(GA.gra(T5, 0), GA.gra(T5, 6)), e8), e8); 
+  T4 = GA.mul(GA.wedge(GA.mul(X, GA.add(I, J)), e8), e8);  #  e8 = 1/e8 ! 
+  W3 = GA.add(W, GA.bld([-3])); 
+  T1 = GA.mul(GA.add(GA.mul(GA.add(I, J), T3), GA.sub(I, J)), GA.bld([1.0/2]));  
+  T2 = GA.mullis([ W3, T4, GA.rev(W3), GA.bld([1.0/GA.mag2(W3)])]); 
+  return GA.mul(T1, T2);  # end def 
+
+# Swaps (dualities) on  Cl(8)^0  versor in  Cl(8) , Lounesto sect. 8 : 
+#   comp(X)  ==  e_8 X (1/e_8)  =  -X* , (1/e8) = e_8 , 
+#   swapa(X)  ==  comp(trial(X))  =  trial^2(comp(X)) , 
+#   swapb(X)  ==  comp(trial^2(X))  =  trial(comp(X)) ; 
+# Note  trial^3  =  (trial^2)^3  =  swapa^2  =  swapb^2  =  1 ; 
+#   swapa swapb  =  trial ,  swapb swapa  =  trial^2 ;  --- composition order ?? 
+
+def comp8(X) : 
+  #return GA.par(X);  # end def  # wrong sign? 
+  return GA.mullis([ GA.gen(8), trial8(X), GA.gen(8) ]);  # end def 
+
+def swap8a(X) : 
+  return comp8(trial8(X));  # end def 
+
+def swap8b(X) : 
+  return trial8(comp8(X));  # end def 
+
+
+# Triality via versors in  Cl(8)  demo: 
+verbose = True; demons = True;  # print & execute switches, True / False
+if demons : 
+  secs = timeit.default_timer(); 
+  print; print "Python/ClifFred/GA_scripts: Demo octonions and triality, n = 8 :  ", GAS_version; print; 
+  
+  n = 8; sigs = [+1 for j in range(0, n)];  #  Cl(8) 
+  GA = ClifFred(sigs); print "signature ", sigs; print; 
+  
+  # Check  T(X)  cycles thru  +1, +1;  -1, J, -J, -1; 
+  X = GA.bld([+1]); X0 = trial8(X); 
+  print X; print X0; print;  # X0 = X ? 
+  X = GA.bld([-1]); Y = trial8(X); Z = trial8(Y); X0 = trial8(Z); 
+  print X; print Y; print Z; print X0; print;  # X0 = X ? 
+  
+  # Check  T(Y)  conserves random vector for random versor  Y 
+  Y = rand_versor(n); U = rand_versor(1); 
+  Z = trial8(Y); V = GA.form(U, Z);  # approx. vector? 
+  V1 = GA.gra(V, 1);  print GA.zero(GA.sub(V, V1)); print V1; 
+  
+  # Test trial & swap identities: all  True  
+  print GA.is_zero(GA.sub(swap8a(Y), trial8(trial8(comp8(Y))))); 
+  print GA.is_zero(GA.sub(swap8b(Y), comp8(trial8(trial8(Y))))); 
+  print GA.is_zero(GA.sub(Y, swap8a(swap8a(Y)))); 
+  print GA.is_zero(GA.sub(Y, swap8b(swap8b(Y)))); 
+  print GA.is_zero(GA.sub(Y, trial8(trial8(trial8(Y))))); 
+  print GA.is_zero(GA.sub(trial8(Y), swap8a(swap8b(Y)))); 
+  print GA.is_zero(GA.sub(trial8(trial8(Y)), swap8b(swap8a(Y)))); 
+  
+  secs = timeit.default_timer() - secs; 
+  print "Elapsed time in secs ", secs;  # 28 sec 
+# end if 
+
+# TODOS --- 
+# Explain & demo what triality actually does: Out(Spin(8)) = S_6 !  *** 
+#   products and (even) versors conserved, but not grades! 
+#   Spin representations & spinors? 
+# Does version with  (1/e_8)  work using  Cl(0,8)  for even versors  --- ?? 
 
 ################################################################################
 
@@ -446,4 +580,6 @@ if demons :
 # end if 
 
 ################################################################################
+
+quit(); 
 
