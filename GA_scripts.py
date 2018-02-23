@@ -214,17 +214,15 @@ if demons :
 #   A o B  ==  < A B(1 - V) >_{0,1}  (tested!)  
 # Implement & compare alternative versions of omp7(), omp8() ? 
 
-# Convert  Cl(0,7)  paravector  X  to/from  Cl(8)^0  multor  Y  in  Cl(0,8) : 
+# Algebra (not versors) isomorphism between  Cl(1,7)  and  Cl(0,8)^0 : 
 #   assumes  X  omits  e_8 ,  Y  is even; 
-def con7to8(X) :  # local me8; 
-  me8 = GA.sub(GA.bld(), GA.gen(8));  # - e_8 
-  return GA.sub(GA.even(X), GA.mul(GA.odd(X), me8));  # end def 
+def con7to8(X) : 
+  return GA.add(GA.even(X), GA.mul(GA.odd(X), GA.gen(8)));  # end def 
 
-def con8to7(Y) :  # local me8, Xe, Xo; 
-  me8 = GA.sub(GA.bld(), GA.gen(8));  # - e_8 
-  Xe = GA.mul(GA.wedge(Y, me8), me8);  # - even(Y) 
-  Xo = GA.mul(GA.add(Y, Xe), me8);  # odd(Y) 
-  return GA.sub(Xo, Xe);  # end def 
+def con8to7(Y) :  # local Xe, Xo; 
+  Xe = GA.mul(GA.wedge(Y, GA.gen(8)), GA.gen(8));  # - even(Y) 
+  Xo = GA.mul(GA.add(Y, Xe), GA.gen(8));  # odd(Y) 
+  return GA.sub(GA.bld(), GA.add(Xo, Xe));  # end def 
 
 # Octonion product of paravectors in  Cl(0,n)  for  n >= 7 : 
 #   < X Y (1 - V) >_{0,1} , with  V = e_124 + ... + e_713 ; 
@@ -254,12 +252,13 @@ if demons :
   X = GA.add(GA.bld([x0], 0), GA.bld([x1, x2, x3, x4, x5, x6, x7], 1)); 
   Y = GA.add(GA.bld([y0], 0), GA.bld([y1, y2, y3, y4, y5, y6, y7], 1)); 
   Z = GA.add(GA.bld([z0], 0), GA.bld([z1, z2, z3, z4, z5, z6, z7], 1)); 
-  simpex(GA.sub( omp7(omp7(X, omp7(Y, Z)), X), omp7(omp7(X, Y), omp7(Z, X)) ));  
-  # (X(Y Z))X = (X Y)(Z X) 
-  simpex(GA.sub( omp7(omp7(omp7(X, Y), X), Z), omp7(X, omp7(Y, omp7(X, Z))) )); 
-   # ((X Y)X)Z = X(Y(X Z) 
-  simpex(GA.sub( omp7(Z, omp7(omp7(X, Y), X)), omp7(omp7(omp7(Z, X), Y), X) )); 
-   # Z((X Y)X) = ((Z X)Y)X 
+  
+  print GA.is_zero(  # (X(Y Z))X = (X Y)(Z X) 
+  simpex(GA.sub( omp7(omp7(X, omp7(Y, Z)), X), omp7(omp7(X, Y), omp7(Z, X)) )));  
+  print GA.is_zero(  # ((X Y)X)Z = X(Y(X Z) 
+  simpex(GA.sub( omp7(omp7(omp7(X, Y), X), Z), omp7(X, omp7(Y, omp7(X, Z))) ))); 
+  print GA.is_zero(  # Z((X Y)X) = ((Z X)Y)X 
+  simpex(GA.sub( omp7(Z, omp7(omp7(X, Y), X)), omp7(omp7(omp7(Z, X), Y), X) ))); 
   
   secs = timeit.default_timer() - secs; 
   print "Elapsed time in secs ", secs;  # 16.5 sec 
@@ -570,5 +569,5 @@ if demons :
 
 ################################################################################
 
-quit();  # ignored? 
+#quit();  # ignored? 
 
