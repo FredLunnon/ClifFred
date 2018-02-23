@@ -274,11 +274,12 @@ if demons :
 #   V  ==  e_124 + e_235 + e_346 + e_457 + e_561 + e_672 + e_713 ; 
 #   W  ==  V (1/J)  =  V J ; 
 
-def trial07(X) :  
-  # local T, T1, T2, T3, T4, T5, W3, V, W, J, I, v, l, fano, e8; 
+# Triality on para versor in  Cl(0,7) 
+def T07(X) :  
+  # local T, T1, T2, T3, T4, T5, W3, V, W, J, I, k, l, fano, e8; 
   I = GA.bld([1]); J = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
-  fano = [ [v%7, (v+1)%7, (v+3)%7] for v in range(0, 7) ]; 
-  V = GA.addlis([ GA.mullis([GA.gen(v+1) for v in l]) for l in fano ]); 
+  fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
+  V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
   W = GA.mul(V, J, 4, 4); 
   T5 = GA.mul(GA.mul(X, GA.add(I, W)), GA.add(I, J)); 
   T3 = GA.add(GA.gra(T5, 0), GA.gra(T5, 6)); 
@@ -289,8 +290,8 @@ def trial07(X) :
   return GA.mul(T1, T2);  # end def 
 
 # Triality on even versor in  Cl(0,8) 
-def trial08(Y) : 
-  return con7to8(trial07(con8to7(Y)));  # end def 
+def T08(Y) : 
+  return con7to8(T07(con8to7(Y)));  # end def 
 
 # Triality  T(X)  on  Cl(8)^0  versor in  Cl(8) , Lounesto sect. 9 : 
 #   T(X)  ==  T1(X) T2(X) ; 
@@ -301,7 +302,8 @@ def trial08(Y) :
 #   W  ==  V (1/e_1234567)  =  e_8 J V ; 
 #   note  (... ^ e_8) (1/e8)  doesn't cancel!
 
-def trial8(X) : 
+# Triality on even versor in  Cl(8) 
+def T8(X) : 
   # local T, T1, T2, T3, T4, T5, W3, V, W, J, I, e8, k, l, fano; 
   I = GA.bld([1]); e8 = GA.gen(8); J = GA.J; 
   fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
@@ -315,30 +317,29 @@ def trial8(X) :
   T2 = GA.mullis([ W3, T4, GA.rev(W3), GA.bld([1.0/GA.mag2(W3)])]); 
   return GA.mul(T1, T2);  # end def 
 
-# Swaps (dualities) on  Cl(0,8)^0  versor in  Cl(0,8) , Lounesto sect. 8 : 
+# Swap (duality) on even versor in  Cl(0,8)  or   Cl(0,8), Lounesto sect. 8 : 
 #   C(X)  ==  e_8 X (1/e_8) , (1/e8) = -e_8 , 
 #   Sa(X)  ==  C(T(X))  =  T(T(C(X))) , 
 #   Sb(X)  ==  C(T(T(X)))  =  T(C(X)) ; 
-#   note  T(T(T(X)))  =  Sa^2  =  Sb^2  =  identity ; 
+# Note  T(T(T(X)))  =  Sa(Sa(X))  =  Sb(Sb(X))  =  X ; 
 #   Sa(Sb(X))  =  T(X) ,  Sb(Sa(X))  =  T(T(X)) ; 
 
-def comp(X) :  # local e8; 
+def C(X) :  # local e8; 
   e8 = GA.gen(8); 
-  return GA.mullis([ e8, trial(X), e8, GA.bld([ GA.gensig[8-1] ]) ]);  # end def 
+  return GA.mullis([ e8, T(X), e8, GA.bld([ GA.gensig[8-1] ]) ]);  # end def 
 
-def swapa(X) : 
-  return comp(trial(X));  # end def 
+def Sa(X) : 
+  return C(T(X));  # end def 
 
-def swapb(X) : 
-  return trial(comp(X));  # end def 
+def Sb(X) : 
+  return T(C(X));  # end def 
 
-def test_triality (s) :  # test triality in  Cl(0,8)  or  Cl(8) 
-  #local n,T,Sa,Sb,C,X,Y,Z,X0,TX,TY,TXY,TXTY;  
-  global GA, trial, swapa, swapb, comp; 
-  n = 8; sigs = [s for j in range(0, n)];  #  Cl(0,8)  or  Cl(8) 
+ # Test triality & swaps in  Cl(0,8)  or  Cl(8) : sign = -1,+1 ; 
+def test_triality (sign, trial) : 
+  #local n,X,Y,Z,X0,TX,TY,TXY,TXTY;  
+  global GA, C, Sa, Sb, T;  T = trial; 
+  n = 8; sigs = [sign for j in range(0, n)];  #  Cl(0,8)  or  Cl(8) 
   GA = ClifFred(sigs); print "signature ", sigs; print; 
-  trial = trial08 if s < 0 else trial8; 
-  T = trial; Sa = swapa; Sb = swapb; C = comp; 
   
   # Check  T()  cycles thru  +1, +1;  -1, s J, -s J, -1; 
   X = GA.bld([+1]); X0 = T(X); 
@@ -373,18 +374,18 @@ if demons :
   secs = timeit.default_timer(); 
   print; print "Python/ClifFred/GA_scripts: Triality in  Cl(0,8)  and  Cl(8) , version", GAS_version; print; 
   
-  test_triality (-1); 
-  test_triality (+1); 
+  test_triality (-1, T08); 
+  test_triality (+1, T8); 
     
   secs = timeit.default_timer() - secs; 
   print "Elapsed time in secs ", secs;  # 83 + 31 sec 
 # end if 
 
 # TODOS --- 
-# Explain & demo what triality actually does: Out(Spin(8)) = S_6 ; 
+# Explain & demo what triality actually does: 
 #   products and (even) versors conserved, but not grades! 
-# T is outer, since T(-1) = (+/-)J  shows addition not conserved; 
-# C is outer, since odd  e_8  not in S(8)^0 ; 
+# T  is outer, since  T(-1) = (+/-)J  shows addition not conserved; 
+#   and  C  is outer, since odd versor transform of  T :  Out(Spin(8)) = S_6 ! 
 
 ################################################################################
 
@@ -569,5 +570,5 @@ if demons :
 
 ################################################################################
 
-quit(); 
+quit();  # ignored? 
 
