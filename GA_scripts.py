@@ -2,7 +2,7 @@
 ################################################################################
 
 #   "ClifFred" demonstrations for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 22/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 23/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_scripts.py 
 
@@ -240,7 +240,6 @@ def omp8(X, Y) :
 
 # Prove Moufang identities for symbolic octonions in  Cl(0,7) 
 #   ((X Y)X)Z = X(Y(X Z);  Z((X Y)X) = ((Z X)Y)X;  (X(Y Z))X = (X Y)(Z X);  
-verbose = True; demons = True;  # print & execute switches, True / False
 if demons : 
   secs = timeit.default_timer(); 
   print; print "Python/ClifFred/GA_scripts: Octonions in  Cl(0,8) , version", GAS_version; print; 
@@ -318,25 +317,25 @@ def T8(X) :
 
 # Swap (duality) on even versor in  Cl(0,8)  or   Cl(0,8), Lounesto sect. 8 : 
 #   C(X)  ==  e_8 X (1/e_8) , (1/e8) = -e_8 , 
-#   Sa(X)  ==  C(T(X))  =  T(T(C(X))) , 
-#   Sb(X)  ==  C(T(T(X)))  =  T(C(X)) ; 
-# Note  T(T(T(X)))  =  Sa(Sa(X))  =  Sb(Sb(X))  =  X ; 
-#   Sa(Sb(X))  =  T(X) ,  Sb(Sa(X))  =  T(T(X)) ; 
+#   S1(X)  ==  C(T(X))  =  T(T(C(X))) , 
+#   S2(X)  ==  C(T(T(X)))  =  T(C(X)) ; 
+# Note  T(T(T(X)))  =  S1(S1(X))  =  S2(S2(X))  =  X ; 
+#   S1(S2(X))  =  T(X) ,  S2(S1(X))  =  T(T(X)) ; 
 
 def C(X) :  # local e8; 
   e8 = GA.gen(8); 
   return GA.mullis([ e8, T(X), e8, GA.bld([ GA.gensig[8-1] ]) ]);  # end def 
 
-def Sa(X) : 
+def S1(X) : 
   return C(T(X));  # end def 
 
-def Sb(X) : 
+def S2(X) : 
   return T(C(X));  # end def 
 
  # Test triality & swaps in  Cl(0,8)  or  Cl(8) : sign = -1,+1 ; 
 def test_triality (sign, trial) : 
-  #local n,X,Y,Z,X0,TX,TY,TXY,TXTY;  
-  global GA, C, Sa, Sb, T;  T = trial; 
+  #local n,X,Y,Z,X0,TX,TY,TXY,TXTY,S;  
+  global GA, C, S1, S2, T;  T = trial; 
   n = 8; sigs = [sign for j in range(0, n)];  #  Cl(0,8)  or  Cl(8) 
   GA = ClifFred(sigs); print "signature ", sigs; print; 
   
@@ -346,6 +345,20 @@ def test_triality (sign, trial) :
   X = GA.bld([-1]); Y = T(X); Z = T(Y); X0 = T(Z); 
   print X; print Y; print Z; print X0; print;  # X0 = X 
   
+  # Check  S1()  cycles thru  +1, +1;  -1, s J, -1; 
+  S = S1; X = GA.bld([+1]); X0 = S(X); 
+  print X; print X0; print;  # X0 = X 
+  X = GA.bld([-1]); Y = S(X); X0 = S(Y); 
+  print X; print Y; print X0; print;  # X0 = X 
+  
+  # Check  S2()  cycles thru  +1, +1;  -1,  -1;  J, -J, J; 
+  S = S2; X = GA.bld([+1]); X0 = S(X); 
+  print X; print X0; print;  # X0 = X 
+  X = GA.bld([-1]); X0 = S(X); 
+  print X; print X0; print;  # X0 = X 
+  X = GA.J; X0 = S(X); 
+  print X; print X0; print;  # X0 = X 
+
   X = rand_versor(n); Y = rand_versor(n); 
   TX = T(X); TY = T(Y);  # random even versors and their images 
   # Check  Z = T(X)  versor: conserves random vector 
@@ -356,19 +369,18 @@ def test_triality (sign, trial) :
   print GA.is_zero(GA.sub(TXY, TXTY)); print; 
   
   # Check trial & swap identities: all  True  
-  print GA.is_zero(GA.sub(Sa(Y), T(T(C(Y))))); 
-  print GA.is_zero(GA.sub(Sb(Y), C(T(T(Y))))); 
-  print GA.is_zero(GA.sub(Y, Sa(Sa(Y)))); 
-  print GA.is_zero(GA.sub(Y, Sb(Sb(Y)))); 
+  print GA.is_zero(GA.sub(S1(Y), T(T(C(Y))))); 
+  print GA.is_zero(GA.sub(S2(Y), C(T(T(Y))))); 
+  print GA.is_zero(GA.sub(Y, S1(S1(Y)))); 
+  print GA.is_zero(GA.sub(Y, S2(S2(Y)))); 
   print GA.is_zero(GA.sub(Y, T(T(T(Y))))); 
-  print GA.is_zero(GA.sub(T(Y), Sa(Sb(Y)))); 
-  print GA.is_zero(GA.sub(T(T(Y)), Sb(Sa(Y)))); 
+  print GA.is_zero(GA.sub(T(Y), S1(S2(Y)))); 
+  print GA.is_zero(GA.sub(T(T(Y)), S2(S1(Y)))); 
   
   print; print; 
 # end def 
 
 # Triality via even versors in  Cl(0,8)  and  Cl(8) : 
-verbose = True; demons = True;  # print & execute switches, True / False
 if demons : 
   secs = timeit.default_timer(); 
   print; print "Python/ClifFred/GA_scripts: Triality in  Cl(0,8)  and  Cl(8) , version", GAS_version; print; 
@@ -377,14 +389,14 @@ if demons :
   test_triality (+1, T8); 
     
   secs = timeit.default_timer() - secs; 
-  print "Elapsed time in secs ", secs;  # 83 + 31 sec 
+  print "Elapsed time in secs ", secs;  # 85 + 31 sec 
 # end if 
 
 # TODOS --- 
 # Explain & demo what triality actually does: 
 #   products and (even) versors conserved, but not grades! 
-# T  is outer, since  T(-1) = (+/-)J  shows addition not conserved; 
-#   and  C  is outer, since odd versor transform of  T :  Out(Spin(8)) = S_6 ! 
+# T  is outer since  T(-1) = (+/-)J  shows addition not conserved;  C  is outer 
+#   since conjugate of  T  by odd versor :  Out(Spin(8)) = S_6 ! 
 
 ################################################################################
 
