@@ -4,7 +4,7 @@
 # Python/SymPy/GA_multor program source for numerical frame transformation 
 # and versor decomposition into fixed-axis (Givens') rotations, with demo & test 
 # harness, for real Clifford algebra  Cl(p,q,r) . 
-# Version 3.3; date: 20/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 3.3; date: 22/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 
 # In command window execute: 
 #     cd /Users/fred/fred/python; python -i GA_givens.py 
@@ -314,7 +314,7 @@ if demons :
 secs = timeit.default_timer() - secs; 
 print "Total elapsed time in secs ", secs;  # ~60 sec 
 
-quit(); 
+#quit();  # ignored? 
 
 ################################################################################
 
