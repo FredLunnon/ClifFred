@@ -2,7 +2,7 @@
 ################################################################################
 
 #   "ClifFred" demonstrations for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 23/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 24/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_scripts.py 
 
@@ -207,36 +207,58 @@ if demons :
 # Advances in Applied Clifford Algebras vol. 11 no.2, 191--213 (2001) 
 # http://deferentialgeometry.org/papers/loun112.pdf 
 
-# Octonion product for multors in  Cl(0,8) , Lounesto sect. 3 :  
-#   A o B  ==  < A e_8 B(1 + W)(1 - J) >_1  for vectors  A,B , identity == e_8  
-# for paravectors in  Cl(0,7)  via 
-#   A o B  ==  < A B(1 + W)(1 - e_1234567) >_{0,1} ; 
+# Octonion product, Lounesto sect. 3 : 
+# for paravectors in  Cl(0,7) 
 #   A o B  ==  < A B(1 - V) >_{0,1}  (tested!)  
-# Implement & compare alternative versions of omp7(), omp8() ? 
+#   A o B  ==  < A B(1 + W)(1 - J7) >_{0,1} ; 
+# for vectors in  Cl(8) : 
+#   A o B  ==  < A e_8 B(1 + W)(1 - J) >_1 , identity == e_8 ; 
+#   J7  ==  e_1234567 ; 
+#   V  ==  e_124 + e_235 + e_346 + e_457 + e_561 + e_672 + e_713 ; 
+#   W  ==  V (1/J7) ; 
 
-# Algebra (not versors) isomorphism between  Cl(1,7)  and  Cl(0,8)^0 : 
+# Algebra (not versors) isomorphism between  Cl(0,7)  and  Cl(0,8)^0 : 
 #   assumes  X  omits  e_8 ,  Y  is even; 
-def con7to8(X) : 
+def con07to08(X) : 
   return GA.add(GA.even(X), GA.mul(GA.odd(X), GA.gen(8)));  # end def 
 
-def con8to7(Y) :  # local Xe, Xo; 
-  Xe = GA.mul(GA.wedge(Y, GA.gen(8)), GA.gen(8));  # - even(Y) 
-  Xo = GA.mul(GA.add(Y, Xe), GA.gen(8));  # odd(Y) 
+def con08to07(Y) :  # local Xe,Xo; 
+  Xe = GA.mul(GA.wedge(Y, GA.gen(8)), GA.gen(8));  # -even(Y) 
+  Xo = GA.mul(GA.add(Y, Xe), GA.gen(8));  # -odd(Y) 
   return GA.sub(GA.bld(), GA.add(Xo, Xe));  # end def 
 
-# Octonion product of paravectors in  Cl(0,n)  for  n >= 7 : 
-#   < X Y (1 - V) >_{0,1} , with  V = e_124 + ... + e_713 ; 
+# Octonion product of  Cl(0,7)  paravectors in  Cl(0,8) , basic: 
+#   A o B  ==  < A B(1 - V) >_{0,1} , version 1; 
 #   note non-associative & non-commutative 
-def omp7(X, Y) :  # local V, Z, fano, vert, line; 
-  fano = [ [1,2,4], [2,3,5], [3,4,6], [4,5,7], [5,6,1], [6,7,2], [7,1,3] ]; 
-  V = GA.addlis([ GA.mullis( [GA.gen(vert) for vert in line]) for line in fano ]); 
-  Z = GA.mul(GA.mul(X, Y), GA.sub(GA.bld([1]), V)); 
+def omp07(X, Y) :  # local V,Z,fano,k,l; 
+  fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
+  V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
+  Z = GA.mullis([ X, Y, GA.sub(GA.bld([1]), V) ]); 
   return GA.add(GA.gra(Z, 0), GA.gra(Z, 1));  # end def 
 
-# Octonion product of multors in  Cl(0,n)  for  n >= 8 : safe version 
-def omp8(X, Y) : 
-  return con7to8(omp7(con8to7(X), con8to7(Y)));  # end def 
+# Octonion product of  Cl(0,7)  paravectors in  Cl(0,8) , alternative: 
+#   A o B  ==  < A B(1 + W)(1 - J7) >_{0,1} ; 	 --- UNUSED ?? 
+def omp07b(X, Y) :  # local I,J7,V,Z,W,fano,k,l; 
+  I = GA.bld([1]); J7 = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
+  fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
+  V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
+  W = GA.mul(V, J7);  # V (1/J7) 
+  Z = GA.mullis([ X, Y, GA.add(I, W), GA.sub(I, J7) ]); 
+  return GA.add(GA.gra(Z, 0), GA.gra(Z, 1));  # end def 
 
+# Octonion product of vectors in  Cl(0,8) : 	 --- UNUSED ?? 
+def omp08(X, Y) : 
+  return con07to08(omp07(con08to07(X), con08to07(Y)));  # end def 
+
+# Octonion product of vectors in  Cl(8) : 	 --- UNUSED ?? 
+#   A o B  ==  < A e_8 B(1 + W)(1 - J) >_1 , identity == e_8 ; 
+def omp8(X, Y) :  # local I,J7,V,Z,W,fano,k,l; 
+  I = GA.bld([1]); J7 = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
+  fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
+  V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
+  W = GA.sub(GA.bld([]), GA.mul(V, J7));  # V (1/J7) 
+  Z = GA.mullis([ X, GA.gen(8), Y, GA.add(I, W), GA.sub(I, J) ]); 
+  return GA.gra(Z, 1);  # end def 
 
 # Prove Moufang identities for symbolic octonions in  Cl(0,7) 
 #   ((X Y)X)Z = X(Y(X Z);  Z((X Y)X) = ((Z X)Y)X;  (X(Y Z))X = (X Y)(Z X);  
@@ -253,11 +275,11 @@ if demons :
   Z = GA.add(GA.bld([z0], 0), GA.bld([z1, z2, z3, z4, z5, z6, z7], 1)); 
   
   print GA.is_zero(  # (X(Y Z))X = (X Y)(Z X) 
-  simpex(GA.sub( omp7(omp7(X, omp7(Y, Z)), X), omp7(omp7(X, Y), omp7(Z, X)) )));  
+  simpex(GA.sub( omp07(omp07(X, omp07(Y, Z)), X), omp07(omp07(X, Y), omp07(Z, X)) )));  
   print GA.is_zero(  # ((X Y)X)Z = X(Y(X Z) 
-  simpex(GA.sub( omp7(omp7(omp7(X, Y), X), Z), omp7(X, omp7(Y, omp7(X, Z))) ))); 
+  simpex(GA.sub( omp07(omp07(omp07(X, Y), X), Z), omp07(X, omp07(Y, omp07(X, Z))) ))); 
   print GA.is_zero(  # Z((X Y)X) = ((Z X)Y)X 
-  simpex(GA.sub( omp7(Z, omp7(omp7(X, Y), X)), omp7(omp7(omp7(Z, X), Y), X) ))); 
+  simpex(GA.sub( omp07(Z, omp07(omp07(X, Y), X)), omp07(omp07(omp07(Z, X), Y), X) ))); 
   
   secs = timeit.default_timer() - secs; 
   print "Elapsed time in secs ", secs;  # 16.5 sec 
@@ -274,22 +296,22 @@ if demons :
 
 # Triality on para versor in  Cl(0,7) 
 def T07(X) :  
-  # local T, T1, T2, T3, T4, T5, W3, V, W, J, I, k, l, fano, e8; 
-  I = GA.bld([1]); J = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
+  # local T, T1, T2, T3, T4, T5, W3, V, W, J7, I, k, l, fano, e8; 
+  I = GA.bld([1]); J7 = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
   fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
   V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
-  W = GA.mul(V, J, 4, 4); 
-  T5 = GA.mul(GA.mul(X, GA.add(I, W)), GA.add(I, J)); 
+  W = GA.mul(V, J7, 4, 4); 
+  T5 = GA.mul(GA.mul(X, GA.add(I, W)), GA.add(I, J7)); 
   T3 = GA.add(GA.gra(T5, 0), GA.gra(T5, 6)); 
-  T4 = GA.even(GA.mul(X, GA.sub(I, J))); 
+  T4 = GA.even(GA.mul(X, GA.sub(I, J7))); 
   W3 = GA.add(W, GA.bld([-3])); 
-  T1 = GA.mul(GA.add(GA.mul(GA.sub(I, J), T3), GA.add(I, J)), GA.bld([1.0/2]));  
+  T1 = GA.mul(GA.add(GA.mul(GA.sub(I, J7), T3), GA.add(I, J7)), GA.bld([1.0/2]));  
   T2 = GA.mullis([ W3, T4, GA.rev(W3), GA.bld([1.0/GA.mag2(W3)])]); 
   return GA.mul(T1, T2);  # end def 
 
 # Triality on even versor in  Cl(0,8) 
 def T08(Y) : 
-  return con7to8(T07(con8to7(Y)));  # end def 
+  return con07to08(T07(con08to07(Y)));  # end def 
 
 # Triality  T(X)  on  Cl(8)^0  versor in  Cl(8) , Lounesto sect. 9 : 
 #   T(X)  ==  T1(X) T2(X) ; 
@@ -407,6 +429,7 @@ if demons :
 #   products and (even) versors conserved, but not grades! 
 # T  is outer since  T(-1) = (+/-)J  shows addition not conserved;  C  is outer 
 #   since conjugate of  T  by odd versor :  Out(Spin(8)) = S_6 ! 
+# Random test of alternative versions of octonion product  X o Y  --- ?? 
 
 ################################################################################
 
