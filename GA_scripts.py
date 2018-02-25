@@ -2,7 +2,7 @@
 ################################################################################
 
 #   "ClifFred" demonstrations for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 24/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 25/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_scripts.py 
 
@@ -225,7 +225,7 @@ def con07to08(X) :
 def con08to07(Y) :  # local Xe,Xo; 
   Xe = GA.mul(GA.wedge(Y, GA.gen(8)), GA.gen(8));  # -even(Y) 
   Xo = GA.mul(GA.add(Y, Xe), GA.gen(8));  # -odd(Y) 
-  return GA.sub(GA.bld(), GA.add(Xo, Xe));  # end def 
+  return GA.neg(GA.add(Xo, Xe));  # end def 
 
 # Octonion product of  Cl(0,7)  paravectors in  Cl(0,8) , basic: 
 #   A o B  ==  < A B(1 - V) >_{0,1} , version 1; 
@@ -256,7 +256,7 @@ def omp8(X, Y) :  # local I,J7,V,Z,W,fano,k,l;
   I = GA.bld([1]); J7 = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
   fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
   V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
-  W = GA.sub(GA.bld([]), GA.mul(V, J7));  # V (1/J7) 
+  W = GA.neg(GA.mul(V, J7));  # V (1/J7) 
   Z = GA.mullis([ X, GA.gen(8), Y, GA.add(I, W), GA.sub(I, J) ]); 
   return GA.gra(Z, 1);  # end def 
 
@@ -296,8 +296,8 @@ if demons :
 
 # Triality on para versor in  Cl(0,7) 
 def T07(X) :  
-  # local T, T1, T2, T3, T4, T5, W3, V, W, J7, I, k, l, fano, e8; 
-  I = GA.bld([1]); J7 = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
+  # local T, T1, T2, T3, T4, T5, W3, V, W, J7, I, e8, k, l, fano; 
+  e8 = GA.gen(8); I = GA.I; J7 = GA.mul(e8, GA.J); 
   fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
   V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
   W = GA.mul(V, J7, 4, 4); 
@@ -325,7 +325,7 @@ def T08(Y) :
 # Triality on even versor in  Cl(8) 
 def T8(X) : 
   # local T, T1, T2, T3, T4, T5, W3, V, W, J, I, e8, k, l, fano; 
-  I = GA.bld([1]); e8 = GA.gen(8); J = GA.J; 
+  e8 = GA.gen(8); I = GA.I; J = GA.J; 
   fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
   V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
   W = GA.mul(V, GA.mul(e8, J), 4, 4); 
@@ -427,8 +427,10 @@ if demons :
 # TODOS --- 
 # Explain & demo what triality actually does: 
 #   products and (even) versors conserved, but not grades! 
-# T  is outer since  T(-1) = (+/-)J  shows addition not conserved;  C  is outer 
-#   since conjugate of  T  by odd versor :  Out(Spin(8)) = S_6 ! 
+# Out(Spin(8)) = S_6  ---  
+#   T  is outer since  T(-1) = (+/-)J  shows addition not conserved;  
+#   C  is outer since conjugate of  T  by versor;  
+#   S1 = T C  is outer since  T(-1) = (-/+)J ;  S2 = C^{-1} T C  is outer. 
 # Random test of alternative versions of octonion product  X o Y  --- ?? 
 
 ################################################################################
