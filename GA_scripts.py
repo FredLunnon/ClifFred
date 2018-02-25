@@ -2,14 +2,13 @@
 ################################################################################
 
 #   "ClifFred" demonstrations for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 25/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 26/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_scripts.py 
 
 # TODOS: optional random fl. pt. inputs? iterative  1/X  demo? 
 # Contents list ?? Set timers after initialising? 
 # Warm up PRNG using timer? 
-# Demo octonions and triality --- to GA_scripts.py ? see  scratch.py 
 
 GAS_version = 1.2;  # update !! 
 from GA_multor import *;  # ClifFred 
@@ -208,8 +207,10 @@ if demons :
 # http://deferentialgeometry.org/papers/loun112.pdf 
 
 # Octonion product, Lounesto sect. 3 : 
-# for paravectors in  Cl(0,7) 
-#   A o B  ==  < A B(1 - V) >_{0,1}  (tested!)  
+# for paravectors in  Cl(0,7)  only 
+#   A o B  ==  - (A ^ B) _| V ; 
+# for  Cl(0,7)  paravectors in  Cl(0,8) 
+#   A o B  ==  < A B(1 - V) >_{0,1} ; 
 #   A o B  ==  < A B(1 + W)(1 - J7) >_{0,1} ; 
 # for vectors in  Cl(8) : 
 #   A o B  ==  < A e_8 B(1 + W)(1 - J) >_1 , identity == e_8 ; 
@@ -237,36 +238,59 @@ def omp07(X, Y) :  # local V,Z,fano,k,l;
   return GA.add(GA.gra(Z, 0), GA.gra(Z, 1));  # end def 
 
 # Octonion product of  Cl(0,7)  paravectors in  Cl(0,8) , alternative: 
-#   A o B  ==  < A B(1 + W)(1 - J7) >_{0,1} ; 	 --- UNUSED ?? 
-def omp07b(X, Y) :  # local I,J7,V,Z,W,fano,k,l; 
-  I = GA.bld([1]); J7 = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
+#   A o B  ==  < A B(1 + W)(1 - J7) >_{0,1} ; 
+def omp07b(X, Y) :  # local V,Z,W,J7,I,e8,fano,k,l; 
+  e8 = GA.gen(8); I = GA.I; J7 = GA.mul(e8, GA.J); 
   fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
   V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
   W = GA.mul(V, J7);  # V (1/J7) 
   Z = GA.mullis([ X, Y, GA.add(I, W), GA.sub(I, J7) ]); 
   return GA.add(GA.gra(Z, 0), GA.gra(Z, 1));  # end def 
 
-# Octonion product of vectors in  Cl(0,8) : 	 --- UNUSED ?? 
+# Octonion product of  Cl(0,7)  paravectors in  Cl(0,7)  only: 
+#   A o B  ==  - (A ^ B) _| V ; 		 --- UNUSED ?? 
+def omp07c(X, Y) :  # local V,Z,fano,k,l; 
+  fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
+  V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
+  return GA.neg(GA.lecon(GA.wedge(X, Y), V));  # end def 
+
+# Octonion product of vectors in  Cl(0,8) : 
 def omp08(X, Y) : 
   return con07to08(omp07(con08to07(X), con08to07(Y)));  # end def 
 
 # Octonion product of vectors in  Cl(8) : 	 --- UNUSED ?? 
 #   A o B  ==  < A e_8 B(1 + W)(1 - J) >_1 , identity == e_8 ; 
-def omp8(X, Y) :  # local I,J7,V,Z,W,fano,k,l; 
-  I = GA.bld([1]); J7 = GA.mullis([GA.gen(v+1) for v in range(0, 7)]); 
+def omp8(X, Y) :  # local V,Z,W,J7,I,e8,fano,k,l; 
+  e8 = GA.gen(8); I = GA.I; J7 = GA.mul(GA.J, e8); 
   fano = [ [k%7, (k+1)%7, (k+3)%7] for k in range(0, 7) ]; 
   V = GA.addlis([ GA.mullis( [GA.gen(k+1) for k in l]) for l in fano ]); 
   W = GA.neg(GA.mul(V, J7));  # V (1/J7) 
   Z = GA.mullis([ X, GA.gen(8), Y, GA.add(I, W), GA.sub(I, J) ]); 
   return GA.gra(Z, 1);  # end def 
 
+# Test octonion product alternatives in  Cl(0,8) 
+if demons : 
+  secs = timeit.default_timer(); 
+  print; print "Python/ClifFred/GA_scripts: Octonion product in  Cl(0,8) , version", GAS_version; print; 
+  
+  n = 8; sigs = [-1 for j in range(0, n)];  #  Cl(0,8) 
+  GA = ClifFred(sigs); print "signature ", sigs; print; 
+  X = rand_grator(); Y = rand_grator(); 
+  Za = con07to08(omp07(con08to07(X), con08to07(Y))); 
+  Zb = con07to08(omp07b(con08to07(X), con08to07(Y))); 
+  print GA.is_zero(GA.sub(Za, Zb)); 
+  
+  secs = timeit.default_timer() - secs; 
+  print "Elapsed time in secs ", secs;  # 0.37 sec 
+# end if 
+
 # Prove Moufang identities for symbolic octonions in  Cl(0,7) 
 #   ((X Y)X)Z = X(Y(X Z);  Z((X Y)X) = ((Z X)Y)X;  (X(Y Z))X = (X Y)(Z X);  
 if demons : 
   secs = timeit.default_timer(); 
-  print; print "Python/ClifFred/GA_scripts: Octonions in  Cl(0,8) , version", GAS_version; print; 
+  print; print "Python/ClifFred/GA_scripts: Octonion Moufang in  Cl(0,7) , version", GAS_version; print; 
   
-  var("x0, x1, x2, x3, x4, x5, x6, x7, x8, y0, y1, y2, y3, y4, y5, y6, y7, y8, z0, z1, z2, z3, z4, z5, z6, z7, z8"); 
+  var("x0, x1, x2, x3, x4, x5, x6, x7, y0, y1, y2, y3, y4, y5, y6, y7, z0, z1, z2, z3, z4, z5, z6, z7"); 
   n = 7; sigs = [-1 for j in range(0, n)];  #  Cl(0,7) 
   GA = ClifFred(sigs); print "signature ", sigs; print; 
   
