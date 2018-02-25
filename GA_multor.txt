@@ -1,6 +1,6 @@
 
 #   "ClifFred" documentation for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 25/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 26/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 
 			Introduction 
          		____________ 
@@ -92,7 +92,7 @@ cd /Users/fred/fred/python; python -i GA_multor.py
   Z = GA.lecon(X, Y, k, l) 	Z := X _| Y 	left contract, graded 
   Z = GA.ricon(X, Y, k, l) 	Z := X |_ Y 	right contract, graded 
   Z = GA.wedge(X, Y, k, l) 	Z := X ^ Y 	outer product, graded 
-  Z = GA.vee(X, Y, k, l) 	Z := (X~ ^ Y~)~ dual outer product, graded  
+  Z = GA.vee(X, Y, k, l) 	Z := X v Y 	dual outer product, graded  
   Z = GA.fat(X, Y, k, l) 	Z := X o Y 	Dorst inner product, graded  
   Z = GA.dot(X, Y, k, l) 	Z := X . Y 	Hestenes inner product, graded  
   Z = GA.scalar(X, Y) 		Z := X * Y 	scalar product 
