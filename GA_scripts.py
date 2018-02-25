@@ -363,33 +363,33 @@ def test_triality (s, triality) :
   
   # Check  T()  cycles thru  +1, +1;  -1, s J, -s J, -1; 
   X = GA.bld([+1]); X0 = T(X); 
-  print X; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(X0); print;  # X0 = X 
   X = GA.bld([-1]); Y = T(X); Z = T(Y); X0 = T(Z); 
-  print X; print Y; print Z; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(Y); print GA.scrub(Z); print GA.scrub(X0); print;  # X0 = X 
   
   # Check  S1()  cycles thru  +1, +1;  -1, s J, -1;  -s J, -s J; 
   S = S1; X = GA.bld([+1]); X0 = S(X); 
-  print X; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(X0); print;  # X0 = X 
   X = GA.bld([-1]); Y = S(X); X0 = S(Y); 
-  print X; print Y; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(Y); print GA.scrub(X0); print;  # X0 = X 
   X = GA.sub(GA.bld([]), GA.J); X0 = S(X); 
-  print X; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(X0); print;  # X0 = X 
   
   # Check  S2()  cycles thru  +1, +1;  -1, -1;  J, -J, J; 
   S = S2; X = GA.bld([+1]); X0 = S(X); 
-  print X; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(X0); print;  # X0 = X 
   X = GA.bld([-1]); X0 = S(X); 
-  print X; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(X0); print;  # X0 = X 
   X = GA.J; Y = S(X); X0 = S(Y); 
-  print X; print Y; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(Y); print GA.scrub(X0); print;  # X0 = X 
 
   # Check  C  cycles thru  +1, +1;  -1, -s J, -1;  s J, s J; 
   X = GA.bld([+1]); X0 = C(X); 
-  print X; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(X0); print;  # X0 = X 
   X = GA.bld([-1]); Y = C(X); X0 = C(Y); 
-  print X; print Y; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(Y); print GA.scrub(X0); print;  # X0 = X 
   X = GA.mul(GA.bld([s]), GA.J); X0 = C(X); 
-  print X; print X0; print;  # X0 = X 
+  print GA.scrub(X); print GA.scrub(X0); print;  # X0 = X 
 
   X = rand_versor(n); Y = rand_versor(n); 
   TX = T(X); TY = T(Y);  # random even versors and their images 
