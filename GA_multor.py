@@ -2,7 +2,7 @@
 ################################################################################
 
 #   "ClifFred" Python source for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 20/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 25/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 # In command window execute: 
 #   cd /Users/fred/fred/python; python -i GA_multor.py 
 
@@ -48,6 +48,7 @@ class ClifFred :
   def __init__(GA, siglis0 = [], siglis1 = []) :  
     # local j,k; # global eps,J; 
     GA.init(siglis0, siglis1);  # table set-up 
+    GA.O = GA.bld([0]);  GA.I = GA.bld([1]);  # zero, unity  
     GA.J = GA.bld([1]);  # quasi-pseudar 
     k = 0; 
     for j in range(0, GA.dim) : 
@@ -290,6 +291,17 @@ class ClifFred :
         Z[k] = [ ] if (Y[k] == [ ]) else [ -Y[k][i] for i in range(0, GA.bin[k]) ]; 
       elif Y[k] == [ ] : Z[k] = copy(X[k]); 
       else : Z[k] = [ X[k][i] - Y[k][i] for i in range(0, GA.bin[k]) ]; 
+      # end if end for 
+    return Z; # end def 
+  
+  # Negate multor: return  Z = - X 
+  def neg (GA, X, lo = None, hi = None) : 
+    # local i,k,Z; global dim,bin; 
+    if lo is None : lo = 0; hi = GA.dim;  # grade options 
+    elif hi is None : hi = lo; # end if 
+    Z = [ [ ] for k in range(0, GA.dim+1) ]; 
+    for k in range(max(lo,0), min(hi,GA.dim)+1) : 
+      if X[k] <> [ ] : Z[k] = [- X[k][i] for i in range(0, GA.bin[k]) ]; 
       # end if end for 
     return Z; # end def 
   
@@ -567,29 +579,29 @@ class ClifFred :
   
   # Distance from multor  X  to zero 
   def zero (GA, X) : 
-    # local k, t, err; global GA.bin, GA.dim; 
+    # local k, i, err; global GA.bin, GA.dim; 
     err = 0.0;  # error 
     for k in range(0, GA.dim+1) : 
       if X[k] <> [] : 
-        for t in range(0, GA.bin[k]) : 
-          err = err + abs(X[k][t]); # end for end if end for 
+        for i in range(0, GA.bin[k]) : 
+          err = err + abs(X[k][i]); # end for end if end for 
     err = err/GA.len; 
     return err; # end def 
   
   # Distance from multors  X, Y  to proportionality 
   def prop (GA, X, Y) : 
-    # local k, t, err, Xcs, Ycs; global GA.bin, GA.dim; 
+    # local k, i, err, Xcs, Ycs; global GA.bin, GA.dim; 
     Xcs = 0.0;  Ycs = 0.0;  # component sums 
     for k in range(0, GA.dim+1) : 
-      for t in range(0, GA.bin[k]) : 
-        if X[k] <> [] : Xcs = Xcs + abs(X[k][t]); # end if 
-        if Y[k] <> [] : Ycs = Ycs + abs(Y[k][t]); # end if end for end for 
+      for i in range(0, GA.bin[k]) : 
+        if X[k] <> [] : Xcs = Xcs + abs(X[k][i]); # end if 
+        if Y[k] <> [] : Ycs = Ycs + abs(Y[k][i]); # end if end for end for 
     err = 0.0; 
     for k in range(0, GA.dim+1) : 
-      for t in range(0, GA.bin[k]) : 
-        if X[k] <> [] and Y[k] <> [] : err = err + abs(Xcs*Y[k][t] - Ycs*X[k][t]); 
-        elif X[k] <> [] : err = err + abs(Ycs*X[k][t]); 
-        elif Y[k] <> [] : err = err + abs(Xcs*Y[k][t]); # end if end for end for 
+      for i in range(0, GA.bin[k]) : 
+        if X[k] <> [] and Y[k] <> [] : err = err + abs(Xcs*Y[k][i] - Ycs*X[k][i]); 
+        elif X[k] <> [] : err = err + abs(Ycs*X[k][i]); 
+        elif Y[k] <> [] : err = err + abs(Xcs*Y[k][i]); # end if end for end for 
     err = err/(2.0*Xcs*Ycs) if (Xcs+Ycs)/2.0 > GA.eps else 1.0; 
     return err; # end def 
   
@@ -602,6 +614,21 @@ class ClifFred :
   def is_prop (GA, X, Y) : 
     # global GA.eps; 
     return GA.prop(X, Y) < GA.eps; # end def 
+  
+  # Round off multor error components: return  Z = X 
+  def scrub (GA, X) : 
+    # local i,k,Z,Zk,Xki,not0; global dim,bin,eps; 
+    Z = [ [ ] for k in range(0, GA.dim+1) ]; 
+    for k in range(0, GA.dim+1) : 
+      if X[k] <> [ ] : 
+        Zk = [ X[k][i] for i in range(0, GA.bin[k]) ]; 
+        not0  = False; 
+        for i in range(0, GA.bin[k]) : 
+          if abs(Zk[i]) < GA.eps : Zk[i] = 0; 
+          else : not0 = True; # end if end for 
+        if not0 : Z[k] = Zk;  # end if 
+      # end if end for 
+    return Z; # end def 
   
   # end class 
 
@@ -635,6 +662,8 @@ for (sigs, mags) in \
   "ClifFred:  even(Z) + odd(Z) = Z "; 
   assert GA.add(GA.grades(Z, 0, 3), GA.grades(Z, 4, 6)) == Z, \
   "ClifFred:  <Z>_{0,3} + <Z>_{4,6} = Z "; 
+  assert GA.sub(GA.O, X) == GA.neg(X), \
+  "ClifFred:  O - X = X "; 
   assert [GA.mag2(X), GA.mag2(Y), GA.mag2(Z)] == mags, \
   "ClifFred:  ||X||, ||Y||, ||Z|| "; 
   assert GA.mag2(X) == GA.lis(GA.mul(GA.rev(X), X))[0], \
@@ -667,6 +696,10 @@ for (sigs, mags) in \
   s = 1 - ( GA.dim - sum(GA.sigsig)//2 )%2*2;  # sign change via squared dual 
   assert GA.dual(GA.dual(Z)) == GA.mul(GA.bld([s]), Z), \
   "ClifFred:  (Z~)~ = +/- Z "; 
+  assert GA.is_zero(GA.bld([GA.eps/2])), \
+  "ClifFred:  J + eps/2 - J ~= 0 "; 
+  assert GA.scrub(GA.add(GA.J, GA.bld([GA.eps/2]))) == GA.J, \
+  "ClifFred:  J + eps/2 ~= J "; 
 
 # end for 
 secs = timeit.default_timer() - secs; 
@@ -675,8 +708,7 @@ print " elapsed time in secs ", secs;  # 0.13 sec
 
 # TODO --- 
 # (versor) divide, pre-divide; rescale by 1/integer; normalise() with sqrt; 
-#   Attach  GA.O = [ [ ] for k in range(0, GA.dim+1) ]; GA.I 
-#   GA.neg() subtract from GA.O , GA.inv() , GA.div() , GA.vid() ;  --- ?? 
+#   GA.inv() , GA.div() , GA.vid() ;  --- ?? 
 # Maybe sum, product, wedge, ... accept arbitrarily many args?  
 #   init() etc :  h -> k -> l -> m -> n  ... 
 #   class ClifFred (object) : https://docs.python.org/2/tutorial/classes.html sect. 9.5 inheritance. 

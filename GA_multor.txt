@@ -1,6 +1,6 @@
 
 #   "ClifFred" documentation for real degenerate Clifford algebras  Cl(p,q,r) . 
-# Version 1.2; date: 20/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
+# Version 1.2; date: 25/02/18; author: Fred Lunnon <Fred.Lunnon@gmail.com> 
 
 			Introduction 
          		____________ 
@@ -84,6 +84,8 @@ cd /Users/fred/fred/python; python -i GA_multor.py
   Z = GA.par(X, k, l) 		Z := X*  	parity involution, graded 
   Z = GA.dual(X, k, l) 		Z := X~  	dual, graded (see below) 
   Z = GA.add(X, Y, k, l) 	Z := X + Y 	sum, graded 
+  Z = GA.sub(X, Y, k, l) 	Z := X - Y 	difference, graded 
+  Z = GA.neg(X, k, l) 		Z := - X  	negation, graded 
   Z = GA.mul(X, Y, k, l) 	Z := X Y 	Clifford product, graded 
   Z = GA.lum(X, Y, k, l) 	Z := (X~ Y~)~ 	dual product, graded 
   Z = GA.form(X, Y, k, l) 	Z := (Y+) X Y 	L-to-R transform, graded 
@@ -100,7 +102,8 @@ cd /Users/fred/fred/python; python -i GA_multor.py
   eps = GA.prop(X, Y) 		|X/Y - scalar| 	distance from proportionality 
   GA.is_zero(X) 		X ~ 0 ?  	approximately zero test 
   GA.is_prop(X, Y) 		X/Y ~ scalar?  	approximately proportional test 
-
+  Z = GA.scrub(X) 		Z := X  	round off error components 
+  
   Other properties of the algebra are available as variables, which should not 
 usually be altered by the user. [ A further subset concerned with the detailed 
 implementation of Clifford multiplication are omitted here and not supported. ] 
@@ -113,9 +116,11 @@ implementation of Clifford multiplication are omitted here and not supported. ]
   GA.gensig[i-1]	signature  e_i e_i  of  e_i  
   GA.sigsig[i-1]	(nonzero) sign of signature of  e_i  
   GA.mongo[k][t] 	monomial  m  binary-encoded as an integer, 
-                        at offset  t  in grade  k ,  0 <= t < bin[k] 
+                        at offset  t  in grade  k ,  0 <= t < bin[k]  
   GA.gramon[m] 		grade  k  of monomial  m 
   GA.offmon[m] 		offset  t  of monomial  m 
+  GA.O 			multor zero  0  
+  GA.I 			multor unity  1  
   GA.J 			product of generators  e_i  with  e_i e_i <> 0 
   GA.eps 		acceptable error threshold used by is_zero(), is_prop(); 
   			user adjustable, default  0.1^(16 - n) . 
@@ -164,6 +169,8 @@ for (sigs, mags) in \
   "ClifFred:  even(Z) + odd(Z) = Z "; 
   assert GA.add(GA.grades(Z, 0, 3), GA.grades(Z, 4, 6)) == Z, \
   "ClifFred:  <Z>_{0,3} + <Z>_{4,6} = Z "; 
+  assert GA.sub(GA.O, X) == GA.neg(X), \
+  "ClifFred:  O - X = X "; 
   assert [GA.mag2(X), GA.mag2(Y), GA.mag2(Z)] == mags, \
   "ClifFred:  ||X||, ||Y||, ||Z|| "; 
   assert GA.mag2(X) == GA.lis(GA.mul(GA.rev(X), X))[0], \
@@ -196,6 +203,10 @@ for (sigs, mags) in \
   s = 1 - ( GA.dim - sum(GA.sigsig)//2 )%2*2;  # sign change via squared dual 
   assert GA.dual(GA.dual(Z)) == GA.mul(GA.bld([s]), Z), \
   "ClifFred:  (Z~)~ = +/- Z "; 
+  assert GA.is_zero(GA.bld([GA.eps/2])), \
+  "ClifFred:  J + eps/2 - J ~= 0 "; 
+  assert GA.scrub(GA.add(GA.J, GA.bld([GA.eps/2]))) == GA.J, \
+  "ClifFred:  J + eps/2 ~= J "; 
 
 # end for 
 secs = timeit.default_timer() - secs; 
